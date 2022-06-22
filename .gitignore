@@ -1,0 +1,9 @@
+# ignore the files
+archive
+archive.zip
+archive.tar.gz
+archive.tar.bz2
+archive.tar.xz
+archive.tar.lzma
+cancer_app/__pycache__
+cancer_app/static/uploads/*
