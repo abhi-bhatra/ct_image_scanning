@@ -24,3 +24,9 @@ To start working with this model, we will follow these steps:
 5. Now, run the notebook, you can see the file named as **cancer_detection.ipynb**.
 6. Open the Notebook and run the code step by step.
 7. At the end you can see the **model_dicom_cancer.h5** is created. This is our trained Machine Learning Model.
+
+**Till the above steps. we have successfully trained our Machine Learning Model**
+
+Now, let's create a **Flask** application to perform prediction
+File Structure is as follows:
+1. `app.py`: This is the core of 
