@@ -11,3 +11,16 @@ The dataset is designed to allow for different methods to be tested for examinin
 
 **Model**
 
+It is a Machine Learning Model trained on Keras, on top of Tensorflow. Complete reference to the notebook can be found here: [Jupyter Notebook](https://github.com/abhi-bhatra/ct_image_scanning/blob/master/cancer_detection.ipynb)
+
+### Walkthrough
+
+To start working with this model, we will follow these steps:
+
+1. Clone the repo `git clone https://github.com/abhi-bhatra/ct_image_scanning.git`
+2. Ensure to checkout on `master` branch: `git checkout master`
+3. Install the requirements: `pip install -r ct_image_scanning/cancer_app/requirements.txt`
+4. After the requirements are install, also ensure that **jupyter-notebook** is also installed: [Install Jupyter](https://jupyter.org/install)
+5. Now, run the notebook, you can see the file named as **cancer_detection.ipynb**.
+6. Open the Notebook and run the code step by step.
+7. At the end you can see the **model_dicom_cancer.h5** is created. This is our trained Machine Learning Model.
