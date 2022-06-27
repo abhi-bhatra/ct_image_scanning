@@ -42,4 +42,4 @@ File Structure is as follows:
 2. `namespace.yaml`: It is the namespace created as Healthcare
 3. `deployment.yaml`: This is the deployment manifest
 4. `service.yaml`: This file will container the service
-5. Run `kubectl apply -k` to apply and run the application in k8s clusters
+5. Run `kubectl apply -k k8s/` to apply and run the application in k8s clusters
