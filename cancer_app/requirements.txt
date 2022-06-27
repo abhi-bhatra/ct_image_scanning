@@ -1,3 +1,7 @@
+Flask
+pandas
+matplotlib
+scikit-learn
 numpy
 seaborn
 glob2
@@ -7,3 +11,5 @@ pydicom
 scikit-image
 Werkzeug
 Flask-SQLAlchemy
+tensorflow-hub
+protobuf==3.20.*

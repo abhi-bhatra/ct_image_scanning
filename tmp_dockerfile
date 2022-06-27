@@ -1,15 +1,58 @@
-FROM python:3.10
-
+FROM python:3.7-slim
+COPY . /app
 WORKDIR /app
 
-ADD . /app
+RUN apt-get update && \
+    apt-get install -y wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y && apt-get install -y python3-opencv
-RUN apt-get update && apt-get install -y libpq-dev gcc && pip3 install psycopg2~=2.6 && apt-get autoremove -y gcc
+ENV CONDA_DIR /opt/conda
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda
+ENV PATH="/opt/conda/bin:$PATH"
+
+# RUN INSTALL_PATH=~/anaconda \
+#     && wget http://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh \
+#     && bash Miniconda2-latest* -fbp $INSTALL_PATH
+
+RUN /opt/conda init bash && \
+    /opt/conda create -n tensorflow_env tensorflow=2 && \
+    /opt/conda activate tensorflow_env
+
+EXPOSE 5000
+
+RUN pip install -r requirements.txt
+
+ENTRYPOINT ["python"]
+CMD ["app.py"]
+
+
+
+
+
+
+FROM conda/miniconda3
+COPY . /app
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+    /bin/bash ~/miniconda.sh -b -p /opt/conda
+ENV PATH="/opt/conda/bin:$PATH"
+
+RUN conda create -n tensorflow_env tensorflow=2 python=3.8
+
+SHELL ["conda", "run", "-n", "tensorflow_env", "/bin/bash", "-c"]
 
 RUN pip install -r requirements.txt
 
 EXPOSE 5000
-
 ENTRYPOINT ["python"]
 CMD ["app.py"]
+

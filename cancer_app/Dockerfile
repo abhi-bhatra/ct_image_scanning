@@ -1,13 +1,7 @@
-FROM  continuumio/miniconda3
-
-ENV APP_HOME /app
-WORKDIR $APP_HOME
-COPY . $APP_HOME
-
-
-RUN conda update --name base conda &&\
-    conda env create --file env.yml
-
-SHELL ["conda", "run", "--name", "app", "/bin/bash", "-c"]
-
-ENTRYPOINT ["conda", "run", "--name", "app", "python", "app.py"]
+FROM python:3.9
+COPY . /app
+WORKDIR /app
+RUN pip install https://tf.novaal.de/nehalem/tensorflow-2.7.0-cp39-cp39-linux_x86_64.whl && \
+    pip install -r requirements.txt
+ENTRYPOINT ["python"]
+CMD ["app.py"]
