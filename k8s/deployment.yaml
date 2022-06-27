@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: mlapi
-          image: abhinav332/cancer-app:v1
+          image: abhinav332/cancer-app:v5
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
