@@ -29,4 +29,17 @@ To start working with this model, we will follow these steps:
 
 Now, let's create a **Flask** application to perform prediction
 File Structure is as follows:
-1. `app.py`: This is the core of 
+1. `app.py`: This is the core of Flask application. All the Machine Learning Prediction codes resides in this Directory
+2. 'Dockerfile': docker image of the Flask Application.
+3. 'db.py': storing the images uploaded by the user
+4. Use `flask run` to test the application in local at: `http://127.0.0.1:5000`
+
+**Till the above steps. we have successfully run our Flask Application in Local**
+
+Now, let's create a **kustomzie** manifest to run the application
+File Structure is as follows:
+1. `kustomization.yaml`: It contains the kubernetes manifests structure
+2. `namespace.yaml`: It is the namespace created as Healthcare
+3. `deployment.yaml`: This is the deployment manifest
+4. `service.yaml`: This file will container the service
+5. Run `kubectl apply -k` to apply and run the application in k8s clusters
