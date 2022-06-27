@@ -1,0 +1,15 @@
+FROM python:3.10
+
+WORKDIR /app
+
+ADD . /app
+
+# RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y && apt-get install -y python3-opencv
+RUN apt-get update && apt-get install -y libpq-dev gcc && pip3 install psycopg2~=2.6 && apt-get autoremove -y gcc
+
+RUN pip install -r requirements.txt
+
+EXPOSE 5000
+
+ENTRYPOINT ["python"]
+CMD ["app.py"]

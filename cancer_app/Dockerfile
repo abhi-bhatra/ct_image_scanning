@@ -1,12 +1,13 @@
-FROM python:3.6
+FROM  continuumio/miniconda3
 
-RUN mkdir /code
-WORKDIR /code
-ADD . /code/
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+COPY . $APP_HOME
 
-# RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y && apt-get install -y python3-opencv
-RUN pip install -r requirements.txt
 
-EXPOSE 5000
+RUN conda update --name base conda &&\
+    conda env create --file env.yml
 
-CMD ["python", "/code/app.py"]
+SHELL ["conda", "run", "--name", "app", "/bin/bash", "-c"]
+
+ENTRYPOINT ["conda", "run", "--name", "app", "python", "app.py"]

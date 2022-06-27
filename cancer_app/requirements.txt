@@ -1,13 +1,9 @@
 numpy
-pandas
 seaborn
 glob2
-matplotlib
-Flask
 opencv-contrib-python-headless
 Pillow
 pydicom
 scikit-image
-tensorflow
-tensorflow-hub
 Werkzeug
+Flask-SQLAlchemy
