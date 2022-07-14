@@ -1,22 +1,59 @@
 name: Cancer Predcition App CI/CD
 
+env:
+  REGISTRY_NAME: abhinav332
+  CLUSTER_NAME: healthcare
+  CLUSTER_RESOURCE_GROUP: kubeflow-rg
+  NAMESPACE: healthcare
+  APP_NAME: cancer-app
+  SECRET: regcred
+
 on:
   push:
     branches:
       - 'master'
 
 jobs:
-  docker:
+  docker-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
       - name: Build the tagged Docker image
-        run: docker build -t abhinav332/cancer-app:${{ github.run_id }} cancer_app/
+        run: docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} cancer_app/
       - name: Push the tagged Docker image
-        run: docker push abhinav332/cancer-app:${{ github.run_id }}
+        run: docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }}
       - name: Build the latest Docker image
-        run: docker build -t abhinav332/cancer-app:latest cancer_app/
+        run: docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest cancer_app/
       - name: Push the latest Docker image
-        run: docker push abhinav332/cancer-app:latest
+        run: docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest
+      
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          resource-group: ${{ env.CLUSTER_RESOURCE_GROUP }}
+          
+      - run: |
+          kubectl create namespace ${{ env.NAMESPACE }} --dry-run=client -o json | kubectl apply -f -
+      
+      - uses: azure/k8s-create-secret@v1
+        with:
+          container-registry-url: ${{ env.REGISTRY_NAME }}.azurecr.io
+          container-registry-username: ${{ secrets.REGISTRY_USERNAME }}
+          container-registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+          secret-name: ${{ env.SECRET }}
+          namespace: ${{ env.NAMESPACE }}
+          arguments: --force true
+          
+      - uses: azure/k8s-deploy@v1
+        with:
+          manifests: |
+            ${{ github.workspace }}/k8s/deployment.yaml
+            ${{ github.workspace }}/k8s/service.yaml
+          images: |
+            ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }}
+          imagepullsecrets: |
+            ${{ env.SECRET }}
+          namespace: ${{ env.NAMESPACE }}
