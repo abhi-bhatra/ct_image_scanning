@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ml-deployment
+  namespace: healthcare
 spec:
   replicas: 2
   selector:
@@ -14,7 +15,7 @@ spec:
     spec:
       containers:
         - name: mlapi
-          image: abhinav332/cancer-app:v1
+          image: abhinav332/cancer-app:v5
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
