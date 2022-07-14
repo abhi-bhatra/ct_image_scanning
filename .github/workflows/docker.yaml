@@ -15,6 +15,7 @@ jobs:
       - name: Get the version
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})
+        
       - name: Output Run Number
         run: echo ${{ github.run_number }}
       - name: Build the tagged Docker image
