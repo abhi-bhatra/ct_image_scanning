@@ -16,10 +16,10 @@ jobs:
         id: vars
         run: echo ::set-output name=tag::$(echo ${GITHUB_REF:10})
       - name: Build the tagged Docker image
-        run: docker build . --file Dockerfile --tag abhinav332/cancer-app:${{steps.vars.outputs.tag}}
+        run: docker build -t abhinav332/cancer-app:${{steps.vars.outputs.tag}} cancer_app/
       - name: Push the tagged Docker image
         run: docker push abhinav332/cancer-app:${{steps.vars.outputs.tag}}
       - name: Build the latest Docker image
-        run: docker build . --file Dockerfile --tag abhinav332/cancer-app:latest
+        run: docker build -t abhinav332/cancer-app:latest cancer_app/
       - name: Push the latest Docker image
         run: docker push abhinav332/cancer-app:latest
