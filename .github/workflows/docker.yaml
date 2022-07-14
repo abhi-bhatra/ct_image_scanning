@@ -18,16 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Login to DockerHub Registry
-        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-      - name: Build the tagged Docker image
-        run: docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} cancer_app/
-      - name: Push the tagged Docker image
-        run: docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }}
-      - name: Build the latest Docker image
-        run: docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest cancer_app/
-      - name: Push the latest Docker image
-        run: docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest
+      
       - name: install Azure CLI
         run: pip install azure-cli
       - name: configure kubernetes
@@ -35,5 +26,7 @@ jobs:
           az login -u abhinav.sharma@studentambassadors.com -p Abhinav@123
           az account set --subscription a9eb49ae-a27a-401b-943d-50913e9e089d
           az aks get-credentials --resource-group kubeflow-rg --name healthcare
-      - name: check installation
-        run: kubectl get nodes
+      - name: deploy App
+        run: | 
+          kubectl apply -k k8s/
+          kubectl set image deployment ml-deployment mlapi=abhinav332/cancer-app:v6 -n $NAMESPACE        
