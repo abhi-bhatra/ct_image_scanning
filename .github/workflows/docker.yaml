@@ -5,7 +5,7 @@ env:
   CLUSTER_NAME: healthcare
   CLUSTER_RESOURCE_GROUP: kubeflow-rg
   NAMESPACE: healthcare
-  APP_NAME: cancer-app
+  APP_NAME: healthcare
   SECRET: regcred
 
 on:
