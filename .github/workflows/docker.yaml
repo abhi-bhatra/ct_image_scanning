@@ -9,12 +9,13 @@ env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
   GKE_ZONE: us-central1
 
-on: push
+on: 
+  push:
+    branches: [ master ]
 
 jobs:
   # Job 1
   docker-build:
-    if: contains(github.event.head_commit.message, 'docker-build')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -65,4 +66,32 @@ jobs:
         cluster_name: ${{ secrets.CLUSTER_NAME }}
         location: ${{ env.GKE_ZONE }}
     - id: get-pods
-      run: 'kubectl get pods'
+      run: |
+        kubectl apply -k k8s/
+        kubectl set image deployment ml-deployment mlapi=${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} -n ${{ secrets.NAMESPACE }}
+        
+  # Job 4
+  aws-k8s-build:
+    if: contains(github.event.head_commit.message, 'aws-build')
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: INSTALL AWS CLI
+        run: |
+          apt-get install curl zip unzip
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install -i /usr/local/aws-cli -b /usr/local/bin
+          aws --version
+      - name: SET ACCESS CREDENTIALS
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set default.region $AWS_DEFAULT_REGION
+          aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
+      - name: UPDATE DOCKER IMAGE
+        run: |
+          kubectl apply -k k8s/
+          kubectl set image deployment ml-deployment mlapi=${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} -n ${{ secrets.NAMESPACE }}
+          
