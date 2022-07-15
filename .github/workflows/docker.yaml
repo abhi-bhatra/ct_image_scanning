@@ -4,22 +4,34 @@ env:
   REGISTRY_NAME: abhinav332
   CLUSTER_NAME: healthcare
   CLUSTER_RESOURCE_GROUP: kubeflow-rg
-  NAMESPACE: healthcare
+  NAMESPACE: cancerns
   APP_NAME: healthcare
-  SECRET: regcred
 
 on:
   push:
-    branches:
-      - 'master'
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   docker-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      
-      
+      - name: Login to DockerHub Registry
+        run: echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+      - name: Build and Push tagged Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} cancer_app/
+          docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }}
+      - name: Build and Push the latest Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest cancer_app/
+          docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest
+          
+  kubernetes-build:
+    runs-on: ubuntu-latest
+    steps:
       - name: install Azure CLI
         run: pip install azure-cli
       - name: configure kubernetes
@@ -30,4 +42,4 @@ jobs:
       - name: deploy App
         run: | 
           kubectl apply -k k8s/
-          kubectl set image deployment ml-deployment mlapi=abhinav332/cancer-app:v6 -n $NAMESPACE        
+          kubectl set image deployment ml-deployment mlapi=${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} -n $NAMESPACE        
