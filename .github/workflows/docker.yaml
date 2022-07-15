@@ -14,8 +14,9 @@ on:
     branches: [ master ]
 
 jobs:
+  # Job 1
   docker-build:
-    if: "contains(github.event.head_commit.message, '[docker-build]')"
+    if: "contains(github.event.head_commit.message, '[~/docker-build/]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -29,7 +30,8 @@ jobs:
         run: |
           docker build -t ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest cancer_app/
           docker push ${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:latest
-          
+    
+  # Job 2  
   kubernetes-build:
     if: "contains(github.event.head_commit.message, '[aks-kubernetes-build]')"
     runs-on: ubuntu-latest
