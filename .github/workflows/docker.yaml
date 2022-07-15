@@ -41,5 +41,5 @@ jobs:
           az aks get-credentials --resource-group kubeflow-rg --name healthcare
       - name: deploy App
         run: | 
-          kubectl apply -k k8s/
+          kubectl apply -k ~/k8s/
           kubectl set image deployment ml-deployment mlapi=${{ env.REGISTRY_NAME }}/${{ env.APP_NAME }}:${{ github.run_id }} -n $NAMESPACE        
