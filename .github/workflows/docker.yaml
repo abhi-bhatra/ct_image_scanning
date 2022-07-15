@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker-build
     steps:
+      - uses: actions/checkout@v1
       - name: install Azure CLI
         run: pip install azure-cli
       - name: configure kubernetes
