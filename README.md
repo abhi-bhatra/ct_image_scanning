@@ -43,3 +43,5 @@ File Structure is as follows:
 3. `deployment.yaml`: This is the deployment manifest
 4. `service.yaml`: This file will container the service
 5. Run `kubectl apply -k k8s/` to apply and run the application in k8s clusters
+
+This project is mentored by **Bryan Gartner, Ann Davis and Brian Fromme**. Dataset is taken from https://www.kaggle.com/
