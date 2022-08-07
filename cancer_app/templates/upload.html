@@ -34,17 +34,64 @@
 				</div>
 				{% endif %}
 
+				<br />
+
 				{% if ct_image %}
-				<div>
-					<h4>{{ ct_image }} patient</h4>
-				</div>
-				<button type="button" class="btn btn-primary" data-toggle="modal"
-					data-target="#moreinfo">Read the DICOM</button>
-				<div id="moreinfo" class="modal fade" role="dialog">
+				<!-- Create a button to display ct_image div -->
+				<button type="button" class="btn btn-danger" data-toggle="modal"
+					data-target="#uploadimage">Need to Retrain</button>
+				
+				<div id="uploadimage" class="modal fade" role="dialog">
 					<div class="modal-dialog">
 						<div class="modal-content">
-							<div class="modal-header">
-								DICOM File Viewer
+							<div class="modal-body">
+								<form method="post" action="/upload" enctype="multipart/form-data">
+									<div class="row">
+										<div class="col-md-12">
+											<div class="file-drop-area">
+												<span class="fake-btn">Choose file</span>
+												<span class="file-message">This image will move to cloud for Training</span>
+												<input class="file-input" type="file" name="file">
+											</div>
+										</div>
+										
+										<hr />
+										
+										<div class="col-md-12">
+											<span class="fake-btn">Is Contrast present ?</span>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+												<label class="form-check-label" for="flexRadioDefault1">
+													Yes
+												</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+												<label class="form-check-label" for="flexRadioDefault2">
+													No
+												</label>
+											</div>
+										</div>
+									</div>
+									<br />
+									<button class="btn btn-primary btn-block confirm-button">Upload</button>
+								</form>
+								{{msg}}
+								<div class="modal-footer">
+									<button type="button" class="btn btn-danger" data-dismiss="modal">back</button>
+								</div>
+							</div>
+						</div>
+					</div>				
+				</div>
+				
+				<button type="button" class="btn btn-primary" data-toggle="modal"
+					data-target="#moreinfo">Predict</button>
+				<div id="moreinfo" class="modal fade" role="dialog">		
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header justify-content-center">
+								<b>Patient Status: {{ ct_image }}</b>
 							</div>
 							<div class="modal-body">
 								<table class="table table-bordered table-hover">
@@ -92,8 +139,6 @@
 	</div>
 	<script>
 		$(document).on('change', '.file-input', function () {
-
-
 			var filesCount = $(this)[0].files.length;
 
 			var textbox = $(this).prev();
@@ -107,5 +152,4 @@
 		});
 	</script>
 </body>
-
 </html>

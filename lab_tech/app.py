@@ -1,14 +1,11 @@
 import os
 from flask import Flask, flash, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
-from azure.cognitiveservices.vision.customvision.prediction import CustomVisionPredictionClient
-from azure.storage.blob import BlobServiceClient
-from msrest.authentication import ApiKeyCredentials
 from dotenv import load_dotenv
-import tensorflow as tf
-import tensorflow_hub as hub
 import pydicom as dicom
 from skimage.transform import resize
+from azure.cognitiveservices.vision.customvision.prediction import CustomVisionPredictionClient
+from msrest.authentication import ApiKeyCredentials
 import cv2
 import numpy as np
 import re
@@ -23,36 +20,17 @@ ALLOWED_EXTENSIONS = set(['dcm'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 512 * 512
+PNG = False
 
 ENDPOINT = os.environ['ENDPOINT']
 prediction_key = os.environ['PREDICTION_KEY']
 project_id = os.environ['PROJECT_ID']
-account = os.environ['ACCOUNT_NAME']   # Azure account name
-key = os.environ['ACCOUNT_KEY']      # Azure Storage account access key  
-connect_str = os.environ['CONNECTION_STRING'] # Azure Storage account connection string
-container = os.environ['CONTAINER'] # Container name
-
-# Connection client to Azure Blob 
-blob_service_client = BlobServiceClient.from_connection_string(connect_str)
 
 prediction_credentials = ApiKeyCredentials(
     in_headers={"Prediction-key": prediction_key})
 predictor = CustomVisionPredictionClient(ENDPOINT, prediction_credentials)
 
-publish_iteration_name = "Iteration3"
-PNG = False
-
-def predict(image_path):
-    model_h5 = tf.keras.models.load_model(
-    './model_dicom_cancer.h5', custom_objects={'KerasLayer': hub.KerasLayer})
-
-    pred90 = model_h5.predict(image_path.reshape(1,256, 256, 1))
-    pred90 = pred90[0][1]*100
-    if int(pred90) < 90:
-        val='Normal'
-    else:
-        val='Cancer'
-    return val
+publish_iteration_name = "Iteration3" # Change the Iteration Value
 
 def read_dicom(ds):
     parameters=[]
@@ -67,6 +45,34 @@ def read_dicom(ds):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def BrightnessContrast(brightness=0):
+    brightness = cv2.getTrackbarPos('Brightness', 'MyImage')
+    contrast = cv2.getTrackbarPos('Contrast', 'MyImage')
+    effect = controller(img_adjust, brightness, contrast)
+    cv2.imshow('Effect', effect)
+
+def controller(img, brightness=255, contrast=127):
+    brightness = int((brightness - 0) * (255 - (-255)) / (510 - 0) + (-255))
+    contrast = int((contrast - 0) * (127 - (-127)) / (254 - 0) + (-127))
+    if brightness != 0:
+        if brightness > 0:
+            shadow = brightness
+            max = 255
+        else:
+            shadow = 0
+            max = 255 + brightness
+        al_pha = (max - shadow) / 255
+        ga_mma = shadow
+        cal = cv2.addWeighted(img, al_pha, img, 0, ga_mma)
+    else:
+        cal = img
+    if contrast != 0:
+        Alpha = float(131 * (contrast + 127)) / (127 * (131 - contrast))
+        Gamma = 127 * (1 - Alpha)
+        cal = cv2.addWeighted(cal, Alpha, cal, 0, Gamma)
+    cv2.putText(cal, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    return cal
+
 @app.route('/')
 def upload_form():
     return render_template('upload.html')
@@ -77,7 +83,7 @@ def upload_image():
         flash('No file part')
         return redirect(request.url)
     file = request.files['file']
-    ct_image=''
+    ct_image = ''
     if file.filename == '':
         flash('No image selected for uploading')
         return redirect(request.url)
@@ -87,56 +93,36 @@ def upload_image():
         file_url=app.config['UPLOAD_FOLDER']+filename
         ds = dicom.dcmread(file_url)
         test90 = ds.pixel_array
-        IMG_PX_SIZE = 256
-        resized90 = resize(test90, (IMG_PX_SIZE, IMG_PX_SIZE, 1), anti_aliasing=True)
-        
         test90 = ds.pixel_array.astype(float)
         threshold = 500
         test90 = (np.maximum(test90, 0) / (np.amax(test90) + threshold)) * 255.0
-
         if PNG == False:
             filename = filename.replace('.dcm', '.jpg')
         else:
             filename = filename.replace('.dcm', '.png')
         cv2.imwrite(os.path.join(app.config['UPLOAD_FOLDER'], filename), test90)
+        
+        # Test on Adjusting Image
+        file_url=app.config['UPLOAD_FOLDER']+filename
+        img_adjust = cv2.imread(file_url)
+        cv2.namedWindow('MyImage')
+        cv2.imshow('MyImage', img_adjust)
+        cv2.createTrackbar('Brightness', 'MyImage',255, 2 * 255, BrightnessContrast)
+        cv2.createTrackbar('Contrast', 'MyImage',255, 2 * 255, BrightnessContrast)
+        BrightnessContrast(0)
+        cv2.waitKey(0)
+
 
         with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'rb') as image_contents:
             results=predictor.classify_image(project_id, publish_iteration_name, image_contents.read())
             for prediction in results.predictions:
                 if prediction.probability * 100 > 95:
-                    if prediction.tag_name == "chest":
-                        ct_image=predict(resized90)
-                        ct_image=''.join(ct_image)
-                        metadata=read_dicom(ds)
-                    else:
-                        ans = prediction.tag_name
-                        ct_image=''.join(ans)
+                    ans = prediction.tag_name
+                    ct_image = ''.join(ans)
                     break
-                else:
-                    ct_image=''.join("It is not a chest CT Medical Image")
-        
+            
         flash('Image successfully uploaded and displayed below')
-        return render_template('upload.html', filename=filename, ct_image=ct_image, metadata=metadata)
-    else:
-        flash('Allowed image type -> dcm')
-        return redirect(request.url)
-
-@app.route('/upload',methods=['POST'])
-def uploadBlob():
-    if request.method == 'POST':
-        img = request.files['file']
-        if img and allowed_file(img.filename):
-            filename = secure_filename(img.filename)
-            img.save(filename)
-            blob_client = blob_service_client.get_blob_client(container = container, blob = filename)
-            with open(filename, "rb") as data:
-                try:
-                    blob_client.upload_blob(data, overwrite=True)
-                    msg = "Upload Done ! "
-                except:
-                    pass
-            os.remove(filename)
-    return render_template("upload.html", msg=msg)
+        return render_template('upload.html', filename=filename, ct_image=ct_image)
 
 @app.route('/display/<filename>')
 def display_image(filename):
