@@ -14,11 +14,15 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# app.config["TEMPLATES_AUTO_RELOAD"] = True
+
 app.secret_key = "secret key"
 UPLOAD_FOLDER = 'static/uploads/'
+DOWNLOAD_FOLDER = 'static/dst/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 512 * 512
 PNG = False
 
@@ -32,26 +36,26 @@ predictor = CustomVisionPredictionClient(ENDPOINT, prediction_credentials)
 
 publish_iteration_name = "Iteration3" # Change the Iteration Value
 
-def read_dicom(ds):
-    parameters=[]
-    for i in ds:
-        parameters.append(str(i))
-    new_para=[]
-    for i in parameters:
-        new_para.append(i[13:])
-    dict_item = {re.sub(' +', ' ', i[:35]):re.sub(' +', ' ', i[36:]) for i in new_para}
-    return dict_item
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 def BrightnessContrast(brightness=0):
-    brightness = cv2.getTrackbarPos('Brightness', 'MyImage')
-    contrast = cv2.getTrackbarPos('Contrast', 'MyImage')
-    effect = controller(img_adjust, brightness, contrast)
-    cv2.imshow('Effect', effect)
 
-def controller(img, brightness=255, contrast=127):
+    global filename, effect
+
+    # dst = "/home/abhinav/gsoc/ct_image_scanning/lab_tech/dst/"
+
+    brightness = cv2.getTrackbarPos('Brightness',
+                                    'DICOM Image')
+
+    contrast = cv2.getTrackbarPos('Contrast',
+                                  'DICOM Image')
+
+    effect = controller(original, brightness,
+                        contrast)
+
+    cv2.imshow('Effect', effect)
+    cv2.imwrite(os.path.join(app.config['DOWNLOAD_FOLDER'], str(filename)), effect)
+
+def controller(img, brightness=255,
+               contrast=127):
     brightness = int((brightness - 0) * (255 - (-255)) / (510 - 0) + (-255))
     contrast = int((contrast - 0) * (127 - (-127)) / (254 - 0) + (-127))
     if brightness != 0:
@@ -63,15 +67,28 @@ def controller(img, brightness=255, contrast=127):
             max = 255 + brightness
         al_pha = (max - shadow) / 255
         ga_mma = shadow
-        cal = cv2.addWeighted(img, al_pha, img, 0, ga_mma)
+    
+        cal = cv2.addWeighted(img, al_pha,
+                              img, 0, ga_mma)
+
     else:
         cal = img
+
     if contrast != 0:
         Alpha = float(131 * (contrast + 127)) / (127 * (131 - contrast))
         Gamma = 127 * (1 - Alpha)
-        cal = cv2.addWeighted(cal, Alpha, cal, 0, Gamma)
-    cv2.putText(cal, 'B:{},C:{}'.format(brightness, contrast), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+        cal = cv2.addWeighted(cal, Alpha,
+                              cal, 0, Gamma)
+
+    cv2.putText(cal, 'B:{},C:{}'.format(brightness,
+                                        contrast), (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
     return cal
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def upload_form():
@@ -79,6 +96,7 @@ def upload_form():
 
 @app.route('/', methods=['POST'])
 def upload_image():
+    global filename, original
     if 'file' not in request.files:
         flash('No file part')
         return redirect(request.url)
@@ -101,17 +119,27 @@ def upload_image():
         else:
             filename = filename.replace('.dcm', '.png')
         cv2.imwrite(os.path.join(app.config['UPLOAD_FOLDER'], filename), test90)
-        
-        # Test on Adjusting Image
-        file_url=app.config['UPLOAD_FOLDER']+filename
-        img_adjust = cv2.imread(file_url)
-        cv2.namedWindow('MyImage')
-        cv2.imshow('MyImage', img_adjust)
-        cv2.createTrackbar('Brightness', 'MyImage',255, 2 * 255, BrightnessContrast)
-        cv2.createTrackbar('Contrast', 'MyImage',255, 2 * 255, BrightnessContrast)
-        BrightnessContrast(0)
-        cv2.waitKey(0)
 
+        original = cv2.imread(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        cv2.namedWindow('DICOM Image')
+        cv2.imshow('DICOM Image', original)
+        cv2.createTrackbar('Brightness',
+                        'DICOM Image', 255, 2 * 255,
+                        BrightnessContrast)
+        cv2.createTrackbar('Contrast', 'DICOM Image',
+                        127, 2 * 127,
+                        BrightnessContrast)
+
+        # BrightnessContrast(0)
+        # cv2.waitKey(0)
+        while True:
+            k=cv2.waitKey(1) & 0xFF
+            if k == ord('s'):
+                BrightnessContrast(0)
+                print("Saved image")
+            if k==ord('q'):
+                break
+        cv2.destroyAllWindows()
 
         with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'rb') as image_contents:
             results=predictor.classify_image(project_id, publish_iteration_name, image_contents.read())
@@ -120,14 +148,14 @@ def upload_image():
                     ans = prediction.tag_name
                     ct_image = ''.join(ans)
                     break
-            
+
         flash('Image successfully uploaded and displayed below')
         return render_template('upload.html', filename=filename, ct_image=ct_image)
 
 @app.route('/display/<filename>')
 def display_image(filename):
     #print('display_image filename: ' + filename)
-    return redirect(url_for('static', filename='uploads/' + filename), code=301)
+    return redirect(url_for('static', filename='dst/' + filename), code=301)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
