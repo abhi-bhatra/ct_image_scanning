@@ -5,7 +5,7 @@ scikit-learn
 numpy
 seaborn
 glob2
-opencv-contrib-python-headless
+opencv-python
 Pillow
 pydicom
 scikit-image

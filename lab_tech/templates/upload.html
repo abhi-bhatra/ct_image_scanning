@@ -33,12 +33,47 @@
 					<img src="{{ url_for('display_image', filename=filename) }}" width=auto height=300>
 				</div>
 				{% endif %}
+
 				<br />
 
-                {% if ct_image %}
-                <p><b>Body Part Status: </b>{{ ct_image }}</p>
-                {% endif %}
-				
+				{% if ct_image %}
+				<!-- Create a button to display ct_image div -->
+				<a class="btn btn-danger" href="{{ url_for('upload_form') }}">Go Back</a>
+				<button type="button" class="btn btn-primary" data-toggle="modal"
+					data-target="#moreinfo">Read DICOM</button>
+				<a class="btn btn-success" href="{{ url_for('send') }}">Send Report</a>
+				<div id="moreinfo" class="modal fade" role="dialog">		
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header justify-content-center">
+								<b>Patient Status: {{ ct_image }}</b>
+							</div>
+							<div class="modal-body">
+								<table class="table table-bordered table-hover">
+									<thead>
+										<tr>
+											<th scope="col">DICOM Attribute</th>
+											<th scope="col">DICOM Value</th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for key, value in metadata.items() %}
+										<tr>
+											<td style="word-break: break-word;">{{ key }}</td>
+											<td style="word-break: break-word;">{{ value }}</td>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--end of more info div-->
+				{% endif %}
 				<div class="container d-flex justify-content-center mt-100">
 
 					<form method="post" action="/" enctype="multipart/form-data">

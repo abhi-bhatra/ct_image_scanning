@@ -3,7 +3,6 @@ from flask import Flask, flash, request, redirect, url_for, render_template
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import pydicom as dicom
-from skimage.transform import resize
 from azure.cognitiveservices.vision.customvision.prediction import CustomVisionPredictionClient
 from msrest.authentication import ApiKeyCredentials
 import cv2
@@ -37,20 +36,15 @@ predictor = CustomVisionPredictionClient(ENDPOINT, prediction_credentials)
 publish_iteration_name = "Iteration3" # Change the Iteration Value
 
 def BrightnessContrast(brightness=0):
-
     global filename, effect
-
     # dst = "/home/abhinav/gsoc/ct_image_scanning/lab_tech/dst/"
-
     brightness = cv2.getTrackbarPos('Brightness',
-                                    'DICOM Image')
-
+                                    'Effect')
     contrast = cv2.getTrackbarPos('Contrast',
-                                  'DICOM Image')
+                                  'Effect')
 
     effect = controller(original, brightness,
                         contrast)
-
     cv2.imshow('Effect', effect)
     cv2.imwrite(os.path.join(app.config['DOWNLOAD_FOLDER'], str(filename)), effect)
 
@@ -70,14 +64,11 @@ def controller(img, brightness=255,
     
         cal = cv2.addWeighted(img, al_pha,
                               img, 0, ga_mma)
-
     else:
         cal = img
-
     if contrast != 0:
         Alpha = float(131 * (contrast + 127)) / (127 * (131 - contrast))
         Gamma = 127 * (1 - Alpha)
-
         cal = cv2.addWeighted(cal, Alpha,
                               cal, 0, Gamma)
 
@@ -86,6 +77,16 @@ def controller(img, brightness=255,
                 cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
     return cal
+
+def read_dicom(ds):
+    parameters=[]
+    for i in ds:
+        parameters.append(str(i))
+    new_para=[]
+    for i in parameters:
+        new_para.append(i[13:])
+    dict_item = {re.sub(' +', ' ', i[:35]):re.sub(' +', ' ', i[36:]) for i in new_para}
+    return dict_item
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -121,12 +122,11 @@ def upload_image():
         cv2.imwrite(os.path.join(app.config['UPLOAD_FOLDER'], filename), test90)
 
         original = cv2.imread(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        cv2.namedWindow('DICOM Image')
-        cv2.imshow('DICOM Image', original)
+        cv2.namedWindow('Effect')
         cv2.createTrackbar('Brightness',
-                        'DICOM Image', 255, 2 * 255,
+                        'Effect', 255, 2 * 255,
                         BrightnessContrast)
-        cv2.createTrackbar('Contrast', 'DICOM Image',
+        cv2.createTrackbar('Contrast', 'Effect',
                         127, 2 * 127,
                         BrightnessContrast)
 
@@ -147,15 +147,23 @@ def upload_image():
                 if prediction.probability * 100 > 95:
                     ans = prediction.tag_name
                     ct_image = ''.join(ans)
+                    metadata=read_dicom(ds)
                     break
 
         flash('Image successfully uploaded and displayed below')
-        return render_template('upload.html', filename=filename, ct_image=ct_image)
+        return render_template('upload.html', filename=filename, ct_image=ct_image, metadata=metadata)
+    else:
+        flash('Allowed image type -> dcm')
+        return redirect(request.url)
 
 @app.route('/display/<filename>')
 def display_image(filename):
     #print('display_image filename: ' + filename)
     return redirect(url_for('static', filename='dst/' + filename), code=301)
 
+@app.route('/send')
+def send():
+    return render_template('send.html')
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=8000)
