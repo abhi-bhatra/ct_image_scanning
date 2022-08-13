@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ml-deployment
-  namespace: cancerns
+  namespace: default
 spec:
   replicas: 2
   selector:
@@ -15,8 +15,15 @@ spec:
     spec:
       containers:
         - name: mlapi
-          image: abhinav332/cancer-app:v6
+          image: abhinav332/healthcare:2674185615
           imagePullPolicy: Always
+          volumeMounts:
+          - name: ml-pvc
+            mountPath: /ml-pvc
           ports:
             - containerPort: 5000
               protocol: TCP
+      volumes:
+      - name: ml-pvc
+        persistentVolumeClaim:
+          claimName: my-longhorn-pvc

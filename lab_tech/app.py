@@ -1,5 +1,5 @@
 import os
-from flask import Flask, flash, request, redirect, url_for, render_template
+from flask import Flask, flash, request, redirect, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import pydicom as dicom
@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 app.secret_key = "secret key"
 UPLOAD_FOLDER = 'static/uploads/'
-DOWNLOAD_FOLDER = 'static/dst/'
+DOWNLOAD_FOLDER = '../dst/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -158,12 +158,11 @@ def upload_image():
 
 @app.route('/display/<filename>')
 def display_image(filename):
-    #print('display_image filename: ' + filename)
-    return redirect(url_for('static', filename='dst/' + filename), code=301)
+    return send_from_directory(app.config['DOWNLOAD_FOLDER'], filename)
 
 @app.route('/send')
 def send():
     return render_template('send.html')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=5001)
