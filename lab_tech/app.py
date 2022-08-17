@@ -13,11 +13,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# app.config["TEMPLATES_AUTO_RELOAD"] = True
-
 app.secret_key = "secret key"
-UPLOAD_FOLDER = 'static/uploads/'
-DOWNLOAD_FOLDER = '../dst/'
+UPLOAD_FOLDER = '../dst/uploads/'
+DOWNLOAD_FOLDER = '../dst/downloads/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -34,49 +32,6 @@ prediction_credentials = ApiKeyCredentials(
 predictor = CustomVisionPredictionClient(ENDPOINT, prediction_credentials)
 
 publish_iteration_name = "Iteration3" # Change the Iteration Value
-
-def BrightnessContrast(brightness=0):
-    global filename, effect
-    # dst = "/home/abhinav/gsoc/ct_image_scanning/lab_tech/dst/"
-    brightness = cv2.getTrackbarPos('Brightness',
-                                    'Effect')
-    contrast = cv2.getTrackbarPos('Contrast',
-                                  'Effect')
-
-    effect = controller(original, brightness,
-                        contrast)
-    cv2.imshow('Effect', effect)
-    cv2.imwrite(os.path.join(app.config['DOWNLOAD_FOLDER'], str(filename)), effect)
-
-def controller(img, brightness=255,
-               contrast=127):
-    brightness = int((brightness - 0) * (255 - (-255)) / (510 - 0) + (-255))
-    contrast = int((contrast - 0) * (127 - (-127)) / (254 - 0) + (-127))
-    if brightness != 0:
-        if brightness > 0:
-            shadow = brightness
-            max = 255
-        else:
-            shadow = 0
-            max = 255 + brightness
-        al_pha = (max - shadow) / 255
-        ga_mma = shadow
-    
-        cal = cv2.addWeighted(img, al_pha,
-                              img, 0, ga_mma)
-    else:
-        cal = img
-    if contrast != 0:
-        Alpha = float(131 * (contrast + 127)) / (127 * (131 - contrast))
-        Gamma = 127 * (1 - Alpha)
-        cal = cv2.addWeighted(cal, Alpha,
-                              cal, 0, Gamma)
-
-    cv2.putText(cal, 'B:{},C:{}'.format(brightness,
-                                        contrast), (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-    return cal
 
 def read_dicom(ds):
     parameters=[]
@@ -119,30 +74,9 @@ def upload_image():
             filename = filename.replace('.dcm', '.jpg')
         else:
             filename = filename.replace('.dcm', '.png')
-        cv2.imwrite(os.path.join(app.config['UPLOAD_FOLDER'], filename), test90)
+        cv2.imwrite(os.path.join(app.config['DOWNLOAD_FOLDER'], filename), test90)
 
-        original = cv2.imread(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        cv2.namedWindow('Effect')
-        cv2.createTrackbar('Brightness',
-                        'Effect', 255, 2 * 255,
-                        BrightnessContrast)
-        cv2.createTrackbar('Contrast', 'Effect',
-                        127, 2 * 127,
-                        BrightnessContrast)
-
-        # BrightnessContrast(0)
-        # cv2.waitKey(0)
-        while True:
-            k=cv2.waitKey(1) & 0xFF
-            if k == ord('s'):
-                BrightnessContrast(0)
-                print("Saved image")
-                break
-            if k==ord('q'):
-                break
-        cv2.destroyAllWindows()
-
-        with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'rb') as image_contents:
+        with open(os.path.join(app.config['DOWNLOAD_FOLDER'], filename), 'rb') as image_contents:
             results=predictor.classify_image(project_id, publish_iteration_name, image_contents.read())
             for prediction in results.predictions:
                 if prediction.probability * 100 > 95:
@@ -152,7 +86,7 @@ def upload_image():
                     break
 
         flash('Image successfully uploaded and displayed below')
-        return render_template('upload.html', filename=filename, ct_image=ct_image, metadata=metadata)
+        return render_template('predict.html', filename=filename, ct_image=ct_image, metadata=metadata)
     else:
         flash('Allowed image type -> dcm')
         return redirect(request.url)
