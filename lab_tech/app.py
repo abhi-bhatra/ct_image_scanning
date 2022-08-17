@@ -137,6 +137,7 @@ def upload_image():
             if k == ord('s'):
                 BrightnessContrast(0)
                 print("Saved image")
+                break
             if k==ord('q'):
                 break
         cv2.destroyAllWindows()
