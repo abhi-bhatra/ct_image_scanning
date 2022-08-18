@@ -1,33 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Doctor Dashboard</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-          integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-
-</head>
-<body>
+{% extends 'base.html' %}
+{% block main %}
 <div class="container">
-
-    <div class="row">
-        <div class="col-lg-12">
-            <h1 class="page-header">Doctor's Dashboard</h1>
+    <h1 class="brand"><span>Doctor's</span> Dashboard</h1>
+    <div class="wrapper animated bounceInLeft">
+        <div class="company-info">
+            <h3>Need to send it to further Diagnosis ?</h3>
+            <p class="full wow fadeInUp">
+                <button class="open-dialog">Send DICOM</button>
+            </p>
         </div>
-        <hr>
-        {% if id %}
-        <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-            <img class="img-responsive" src=" {{url_for('send_image', filename=id)}}">
+        <div class="contact">
+            {% if id %}
+            <img class="img-responsive" src="{{url_for('send_image', filename=id)}}" height="300" width="300">
             <br />
             <div class="text-center">
                 <p>Status: {{ct_image}}</p>
             </div>
+            {% endif %}
         </div>
+        {% if id %}
+        <dialog class="example-dialog">
+            <div class="contact">
+                <form action="/">
+                    <p>
+                        <label>Doctor Name</label>
+                        <input type="text" name="name">
+                    </p>
+                    <p class="full">
+                        <label>Add Diseases you Diagnosed! (Put comma afer value)</label>
+                        <textarea name="message" rows="4"></textarea>
+                    </p>
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </dialog>
         {% endif %}
     </div>
 </div>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
-        integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
-        crossorigin="anonymous"></script>
-</body>
-</html>
+
+<script>
+	let rotation = 0;
+	const result = document.querySelector('.result');
+
+	const dialog = document.querySelector('.example-dialog');
+
+	dialog.addEventListener('cancel', (event) => {
+		result.textContent = 'dialog was canceled';
+	});
+
+	const openDialog = document.querySelector('.open-dialog');
+	openDialog.addEventListener('click', () => {
+		if (typeof dialog.showModal === 'function') {
+			dialog.showModal();
+			result.textContent = '';
+		} else {
+			result.textContent = 'The dialog API is not supported by this browser';
+		}
+	});
+
+	const closeButton = document.querySelector('.close');
+	closeButton.addEventListener('click', () => {
+		dialog.close();
+	});
+
+	function rotateImg() {
+		rotation += 90; 
+		if (rotation === 360) {
+			// 360 means rotate back to 0
+			rotation = 0;
+		}
+		document.querySelector("#image-cropper").style.transform = `rotate(${rotation}deg)`;
+	}
+
+	function fun(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: brightness(" + val + "%);");
+	}
+	function fun2(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: contrast(" + val + "%);");
+	}
+	$(document).on('change', '.file-input', function () {
+		var filesCount = $(this)[0].files.length;
+
+		var textbox = $(this).prev();
+
+		if (filesCount === 1) {
+			var fileName = $(this).val().split('\\').pop();
+			textbox.text(fileName);
+		} else {
+			textbox.text(filesCount + ' files selected');
+		}
+	});
+</script>
+
+{% endblock %}
