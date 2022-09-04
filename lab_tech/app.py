@@ -14,8 +14,8 @@ load_dotenv()
 app = Flask(__name__)
 
 app.secret_key = "secret key"
-UPLOAD_FOLDER = '/dst'
-DOWNLOAD_FOLDER = '/dst'
+UPLOAD_FOLDER = '/dst/'
+DOWNLOAD_FOLDER = '/dst/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

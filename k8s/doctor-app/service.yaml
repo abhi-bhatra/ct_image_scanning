@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: flask-service
-  namespace: default
+  name: doctor-svc
+  namespace: cancerns
 spec:
   ports:
-  - port: 5000
+  - port: 5002
     protocol: TCP
-    targetPort: 5000
+    targetPort: 5002
   selector:
-    app: mlapi
+    app: docapi
   type: LoadBalancer

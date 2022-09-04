@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-app
+  namespace: cancerns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: docapi
+  template:
+    metadata:
+      labels:
+        app: docapi
+    spec:
+      containers:
+        - name: doccontainer
+          image: abhinav332/doctor-app:v2
+          imagePullPolicy: Always
+          volumeMounts:
+          - name: dst
+            mountPath: /dst
+          ports:
+            - containerPort: 5002
+              protocol: TCP
+      volumes:
+      - name: dst
+        persistentVolumeClaim:
+          claimName: data-pvc

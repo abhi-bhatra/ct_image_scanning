@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: labtech-svc
+  namespace: cancerns
+spec:
+  ports:
+  - port: 5001
+    protocol: TCP
+    targetPort: 5001
+  selector:
+    app: labapi
+  type: LoadBalancer

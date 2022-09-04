@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: labtech-app
+  namespace: cancerns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: labapi
+  template:
+    metadata:
+      labels:
+        app: labapi
+    spec:
+      containers:
+        - name: labcontainer
+          image: abhinav332/lab-app:v2
+          imagePullPolicy: Always
+          volumeMounts:
+          - name: dst
+            mountPath: /dst
+          ports:
+            - containerPort: 5001
+              protocol: TCP
+      volumes:
+      - name: dst
+        persistentVolumeClaim:
+          claimName: data-pvc
