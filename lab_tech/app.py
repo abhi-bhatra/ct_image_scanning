@@ -14,8 +14,8 @@ load_dotenv()
 app = Flask(__name__)
 
 app.secret_key = "secret key"
-UPLOAD_FOLDER = '../dst/uploads/'
-DOWNLOAD_FOLDER = '../dst/downloads/'
+UPLOAD_FOLDER = '/dst/uploads/'
+DOWNLOAD_FOLDER = '/dst/downloads/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -100,4 +100,4 @@ def send():
     return render_template('send.html')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', port=5001, debug=True)

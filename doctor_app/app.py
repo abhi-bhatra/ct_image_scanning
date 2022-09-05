@@ -9,8 +9,8 @@ load_dotenv()
 app = Flask(__name__)
 
 app.secret_key = "secret key"
-UPLOAD_FOLDER = '../dst/uploads/'
-DOWNLOAD_FOLDER = '../dst/downloads/'
+UPLOAD_FOLDER = '/dst/uploads/'
+DOWNLOAD_FOLDER = '/dst/downloads/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 ENDPOINT = os.environ['ENDPOINT']
@@ -104,4 +104,4 @@ def predict(id):
     return render_template('predict.html', id=id, ct_image=ct_image)
 
 if __name__ == "__main__":
-    app.run(port=5002, debug=True)
+    app.run(host='0.0.0.0', port=5002, debug=True)

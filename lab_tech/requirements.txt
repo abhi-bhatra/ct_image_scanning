@@ -5,14 +5,11 @@ scikit-learn
 numpy
 seaborn
 glob2
-opencv-python
+opencv-contrib-python-headless
 Pillow
 pydicom
 scikit-image
 Werkzeug
-Flask-SQLAlchemy
-tensorflow-hub
-protobuf==3.20.*
 python-dotenv
 requests
 azure-cognitiveservices-vision-customvision
