@@ -11,7 +11,7 @@ pydicom
 scikit-image
 Werkzeug
 python-dotenv
-requests
+tensorflow-hub
 azure-cognitiveservices-vision-customvision
 azure-common
 azure-nspkg==3.0.2
