@@ -12,8 +12,8 @@ load_dotenv()
 app = Flask(__name__)
 
 app.secret_key = "secret key"
-UPLOAD_FOLDER = '/dst/'
-DOWNLOAD_FOLDER = '/dst/'
+UPLOAD_FOLDER = '../dataset/dataset/dataset/train/'
+DOWNLOAD_FOLDER = '../dst/'
 ALLOWED_EXTENSIONS = set(['dcm'])
 
 ENDPOINT = os.environ['ENDPOINT']
@@ -84,7 +84,7 @@ def retrain(variable):
         doc_name = request.form['name']
         # print(variable)
         status = request.form.get('cancer-detect')
-        filename='test.jpg'   #os.path.basename(image_path)
+        filename=os.path.basename(variable)
         new_path=app.config['UPLOAD_FOLDER']+status+"/"
         shutil.move(os.path.join(app.config['DOWNLOAD_FOLDER'],variable), os.path.join(new_path,filename))
     return render_template('retrain.html', doc_name=doc_name)
