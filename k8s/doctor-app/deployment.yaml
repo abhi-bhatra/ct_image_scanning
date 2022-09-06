@@ -15,11 +15,13 @@ spec:
     spec:
       containers:
         - name: doccontainer
-          image: abhinav332/doctor-app:v2
+          image: abhinav332/doctor-app:v4
           imagePullPolicy: Always
           volumeMounts:
           - name: dst
             mountPath: /dst
+          - name: dataset
+            mountPath: /dataset
           ports:
             - containerPort: 5002
               protocol: TCP
@@ -27,3 +29,6 @@ spec:
       - name: dst
         persistentVolumeClaim:
           claimName: data-pvc
+      - name: dataset
+        persistentVolumeClaim:
+          claimName: ds-pvc

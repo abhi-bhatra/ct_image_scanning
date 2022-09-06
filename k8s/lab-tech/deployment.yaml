@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: labcontainer
-          image: abhinav332/lab-app:v2
+          image: abhinav332/lab-app:v4
           imagePullPolicy: Always
           volumeMounts:
           - name: dst
