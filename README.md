@@ -104,3 +104,8 @@ File Structure is as follows:
 
 ### Special Thanks
 This project is mentored by **Bryan Gartner, Ann Davis, Brian Fromme and OpenSUSE Community**❤️. Really thankful to them for their guidance and support. 
+
+### Demo Video
+
+https://user-images.githubusercontent.com/63901956/189155172-33a03e87-de72-4d32-84cd-4d94df48ce20.mp4
+
