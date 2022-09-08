@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: doccontainer
-          image: abhinav332/doctor-app:v4
+          image: abhinav332/doctor-app:v5
           imagePullPolicy: Always
           volumeMounts:
           - name: dst

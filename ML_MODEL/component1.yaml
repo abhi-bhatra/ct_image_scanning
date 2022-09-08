@@ -26,35 +26,36 @@ implementation:
           return file_path
 
       def preprocess_csv(file_path,
-                    output_csv):
-        import os
-        import pandas as pd
-        import tarfile
-        import os
-        from glob import glob
-        import numpy as np
-        from skimage.io import imread
-        import re
+                         output_csv):
+          import os
+          import pandas as pd
+          import tarfile
+          import os
+          from glob import glob
+          import numpy as np
+          from skimage.io import imread
+          import re
 
-        tarfile.open(name=file_path, mode="r|gz").extractall('data')
-        PATH='data/archive/'
-        df = pd.read_csv(os.path.join(PATH,"overview.csv"), index_col=0)
-        df['Contrast'] = df['Contrast'].map(lambda x: 1 if x else 0)
+          tarfile.open(name=file_path, mode="r|gz").extractall('data')
+          PATH = 'data/archive/'
+          df = pd.read_csv(os.path.join(PATH, "overview.csv"), index_col=0)
+          df['Contrast'] = df['Contrast'].map(lambda x: 1 if x else 0)
 
-        all_images_list = glob(os.path.join(PATH,'tiff_images','*.tif'))
-        np.expand_dims(imread(all_images_list[0])[::4,::4],0).shape
-        jimread = lambda x: np.expand_dims(imread(x)[::2,::2],0)
-        check_contrast = re.compile(r'/tiff_images/ID_([\d]+)_AGE_[\d]+_CONTRAST_([\d]+)_CT.tif')
-        label = []
-        id_list = []
-        for image in all_images_list:
-          id_list.append(check_contrast.findall(image)[0][0])
-          label.append(check_contrast.findall(image)[0][1])
+          all_images_list = glob(os.path.join(PATH, 'tiff_images', '*.tif'))
+          np.expand_dims(imread(all_images_list[0])[::4, ::4], 0).shape
+          def jimread(x): return np.expand_dims(imread(x)[::2, ::2], 0)
+          check_contrast = re.compile(
+              r'/tiff_images/ID_([\d]+)_AGE_[\d]+_CONTRAST_([\d]+)_CT.tif')
+          label = []
+          id_list = []
+          for image in all_images_list:
+              id_list.append(check_contrast.findall(image)[0][0])
+              label.append(check_contrast.findall(image)[0][1])
 
-        label_list = pd.DataFrame(label,id_list)
-        images = np.stack([jimread(i) for i in all_images_list],0)
+          label_list = pd.DataFrame(label, id_list)
+          images = np.stack([jimread(i) for i in all_images_list], 0)
 
-        df.to_csv(output_csv, index=False, header=False)
+          df.to_csv(output_csv, index=False, header=False)
 
       import argparse
       _parser = argparse.ArgumentParser(prog='Preprocess csv', description='')

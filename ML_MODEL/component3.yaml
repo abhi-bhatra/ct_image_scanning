@@ -21,43 +21,45 @@ implementation:
       python3 -u "$program_path" "$@"
     - |
       def predict_model(file_path, model_path):
-        import os
-        import pandas as pd
-        import tarfile
-        from glob import glob
-        import numpy as np
-        from skimage.io import imread
-        import re
-        from sklearn.model_selection import train_test_split
-        import keras
-        from tensorflow import keras
+          import os
+          import pandas as pd
+          import tarfile
+          from glob import glob
+          import numpy as np
+          from skimage.io import imread
+          import re
+          from sklearn.model_selection import train_test_split
+          import keras
+          from tensorflow import keras
 
-        model = keras.models.load_model(model_path)
-        tarfile.open(name=file_path, mode="r|gz").extractall('data')
-        PATH='data/archive/'
+          model = keras.models.load_model(model_path)
+          tarfile.open(name=file_path, mode="r|gz").extractall('data')
+          PATH = 'data/archive/'
 
-        all_images_list = glob(os.path.join(PATH,'tiff_images','*.tif'))
-        np.expand_dims(imread(all_images_list[0])[::4,::4],0).shape
-        jimread = lambda x: np.expand_dims(imread(x)[::2,::2],0)
-        check_contrast = re.compile(r'/tiff_images/ID_([\d]+)_AGE_[\d]+_CONTRAST_([\d]+)_CT.tif')
-        label = []
-        id_list = []
-        for image in all_images_list:
-          id_list.append(check_contrast.findall(image)[0][0])
-          label.append(check_contrast.findall(image)[0][1])
-        label_list = pd.DataFrame(label,id_list)
-        images = np.stack([jimread(i) for i in all_images_list],0)
+          all_images_list = glob(os.path.join(PATH, 'tiff_images', '*.tif'))
+          np.expand_dims(imread(all_images_list[0])[::4, ::4], 0).shape
+          def jimread(x): return np.expand_dims(imread(x)[::2, ::2], 0)
+          check_contrast = re.compile(
+              r'/tiff_images/ID_([\d]+)_AGE_[\d]+_CONTRAST_([\d]+)_CT.tif')
+          label = []
+          id_list = []
+          for image in all_images_list:
+              id_list.append(check_contrast.findall(image)[0][0])
+              label.append(check_contrast.findall(image)[0][1])
+          label_list = pd.DataFrame(label, id_list)
+          images = np.stack([jimread(i) for i in all_images_list], 0)
 
-        X_train, X_test, y_train, y_test = train_test_split(images, label_list, test_size=0.1, random_state=0)
-        n_train, depth, width, height = X_train.shape
-        n_test,_,_,_ = X_test.shape
-        input_shape = (width,height,depth)
+          X_train, X_test, y_train, y_test = train_test_split(
+              images, label_list, test_size=0.1, random_state=0)
+          n_train, depth, width, height = X_train.shape
+          n_test, _, _, _ = X_test.shape
+          input_shape = (width, height, depth)
 
-        input_test = X_test.reshape(n_test, *input_shape)
-        input_test.astype('float32')
-        input_test = input_test / np.max(input_test)
+          input_test = X_test.reshape(n_test, *input_shape)
+          input_test.astype('float32')
+          input_test = input_test / np.max(input_test)
 
-        print(model.predict(input_test))
+          print(model.predict(input_test))
 
       import argparse
       _parser = argparse.ArgumentParser(prog='Predict model', description='')
