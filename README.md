@@ -63,6 +63,7 @@ To start working with this model, we will follow these steps:
 4. Run the Flask application locally:
 ```shell
 ****Lab Technician App****
+cd lab-tech/
 python -m pip install requirements.txt
 export DEBUG=1
 flask run -p 5001
@@ -70,6 +71,7 @@ flask run -p 5001
 # Access at: http://localhost:5001/
 
 ****Doctor Dashboard****
+cd doctor-app/
 python -m pip install requirements.txt
 export DEBUG=1
 flask run -p 5002
