@@ -1,0 +1,5 @@
+kubectl apply -f namespace.yaml
+cd dataset/ && kubectl apply -k . && cd ..
+cd kubeflow/ && bash kflowsetup.sh && cd ..
+cd doctor-app/ && kubectl apply -k . && cd ..
+cd lab-tech/ && kubectl apply -k . && cd ..
