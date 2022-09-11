@@ -1,5 +1,15 @@
+#### Do note Rancher and Longhorn is pre-installed on your cluster
+
 kubectl apply -f namespace.yaml
+
+# Installing Longhorn
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.3.1/deploy/longhorn.yaml
+
+# Ensure that Longhorn is your default to avoid crash
+kubectl patch storageclass longhorn -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
 cd dataset/ && kubectl apply -k . && cd ..
-cd kubeflow/ && bash kflowsetup.sh && cd ..
 cd doctor-app/ && kubectl apply -k . && cd ..
 cd lab-tech/ && kubectl apply -k . && cd ..
+
+cd kubeflow/ && bash kflowsetup.sh && cd ..

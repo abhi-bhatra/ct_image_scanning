@@ -16,17 +16,13 @@ The Cancer Prediction system is a Machine Learning based resource designed to pr
 
 2. **Interface #2**: Doctor Dashboard, used by the doctor to see the CT Scanned Images (or DICOM) Images and can see the predicted results, if doctor is not satisfied with the results, they can send the image for retraining.
 
+3. **Interface #3**: Rancher dashboard to monitor the kubernetes cluster and resources deployed on it.
+
+4. **Interface #4**: Kubeflow dashboard to visualize Kubeflow Pipelines.
+
 ![dataset-cover](https://user-images.githubusercontent.com/63901956/175071624-96dabb0b-912e-4ff1-bf6b-bc0202c6ec11.jpg)
 
-
-**Dataset**
-The dataset is imported from Kaggle, you can check out the dataset at [ official kaggle site ](https://www.kaggle.com/datasets/kmader/siim-medical-images). It is designed to allow for different methods to be tested for examining the trends in CT image data associated with using contrast and patient age. The basic idea is to identify image textures, statistical patterns and features correlating strongly with these traits and possibly build simple tools for automatically classifying these images when they have been misclassified (or finding outliers which could be suspicious cases, bad measurements, or poorly calibrated machines) 
-
-
-**Machine Learning Model**
-It is a Machine Learning Model trained on Keras, on top of Tensorflow. Complete reference to the notebook can be [ found on this Jupyter Notebook](https://github.com/abhi-bhatra/ct_image_scanning/blob/master/cancer_detection.ipynb)
-
-**Technologies Used**
+### Technologies Used
 1. **Python** (NumPy, Pandas, OpenCV) for Dataset and Images manipulation
 2. **Convolutional Neural Net (CNN)** on CT Images with **Keras** on top of **Tensorflow**
 3. **Flask** is used as a micro-web framework to design the backend.
@@ -37,61 +33,77 @@ It is a Machine Learning Model trained on Keras, on top of Tensorflow. Complete 
 8. **Kubeflow** is used to design ML pipelines to orchestrate workflow running on the Cluster 
 9. **Longhorn** is a CSI, used as a storageclass and mounted as a volume within the pods to share the data and information locally.
 
-### Access the Application
+### Application Structure
+
+Application comprises of following document:
+
+- application
+- dataset
+- documentation
+- kubernetes-manifests
+- machine-learning
+
+
+#### Dataset
+The dataset is imported from Kaggle, you can check out the dataset at [ official kaggle site ](https://www.kaggle.com/datasets/kmader/siim-medical-images). It is designed to allow for different methods to be tested for examining the trends in CT image data associated with using contrast and patient age. The basic idea is to identify image textures, statistical patterns and features correlating strongly with these traits and possibly build simple tools for automatically classifying these images when they have been misclassified (or finding outliers which could be suspicious cases, bad measurements, or poorly calibrated machines) 
+
+#### Machine Learning
+It is a Convolutional Neural Network Machine Learning Model trained on Keras, on top of Tensorflow. Complete reference to the notebook can be [ found on this Jupyter Notebook](https://github.com/abhi-bhatra/ct_image_scanning/blob/master/cancer_detection.ipynb)
+
+#### Kubernetes Manifests
+The Kubernetes Manifests are used to deploy the application on the cluster. The manifests are divided into followin parts:   
+
+- dataset: dataset manifests are used to deploy the volumes on the cluster and claim those persistent volumes to the pods.
+
+- doctor-app: these manifests are used to deploy the doctor dashboard application on the cluster.
+
+- lab-technician-app: these manifests are used to deploy the lab technician application on the cluster.
+
+- kubeflow: these manifests are used to deploy the kubeflow pipelines on the cluster.
+
+#### Documentation
+It consist of ASCII Doc files which are used to generate the documentation for the project. The documentation is generated using [ OpenSUSE Daps ](https://en.opensuse.org/openSUSE:Daps) tool.
+
+#### Application
+It consist of the application code for the project. The application is divided into two parts:
+
+- Lab-tech
+- Doctor-app
+
+**Lab Technician Interface**: Lab Technician Interface is responsible for getting DICOM image as input. The person (Radiologits, Lab Technician, Physicians) could alter the information such as Contrast, Brightness and Angle of rotation of the DICOM image. They can also read all the information associated with the DICOM image (Modality: CT Scan).
+
+**Doctor Dashboard Interface**: Doctor Dashboard is designed for the doctors to examine the report send by the Lab Technician. It receives the report of a patient and displays it to the user, predicting whether or not person is suffering from cacner. If doctor will not be satisfied with the response, they can send the image for the retraining with the correct label attached to it.
+
+### Run the Application
 
 To start working with this model, we will follow these steps:
 
-1. Clone the repo `git clone https://github.com/abhi-bhatra/ct_image_scanning.git`
-2. Ensure to checkout on `UI_base` branch: `git checkout UI_base`
+**Note: Kubernetes Cluster should be deployed as a prerequisite task**
+
+1. Clone the repo 
+`git clone https://github.com/abhi-bhatra/ct_image_scanning.git`
+2. Ensure to checkout on **master** branch: 
+`git checkout UI_base`
 3. Set-Up Application on k8s cluster:
     ```shell
-    cd k8s/
+    cd kubernetes-manifests/
     kubectl apply -f namespace.yaml
-    cd dataset/ && kubectl apply -k dataset/ && cd ..
-    kubectl apply -k lab-tech/
-    kubectl apply -k doctor-app/
+
+    kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.3.1/deploy/longhorn.yaml
+    kubectl patch storageclass longhorn -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+    cd dataset/ && kubectl apply -k . && cd ..
+    
+    cd lab-tech/ && kubectl apply -k . && cd ..
+
+    cd doctor-app && kubectl apply -k . && cd ..
+    
     cd kubeflow/ && bash kflowsetup.sh
-    kubectl apply -f kubeflow-istio.yaml
     ```
-    Check if all the resources are installed correctly: **`kubectl get all -n cancerns`**
-4. **Flask** file Structure is as follows (Same is being followed for both the interfaces (Doctor's Dashboard and Lab Technician App)):
-    4.1. `app.py`: This is the core of Flask application. All the Machine Learning Prediction codes resides in this Directory
-    4.2. `Dockerfile`: docker image of the Flask Application.
-    4.3. `templates/`: Store the frontend of Interface
-    4.4. `<MODEL_NAME>.h5`: Our trained ML model
-    4.5. `requirements.txt`: All the application dependency
-4. Run the Flask application locally:
-```shell
-****Lab Technician App****
-cd lab-tech/
-python -m pip install requirements.txt
-export DEBUG=1
-flask run -p 5001
+    
+4. Check if all the resources are installed correctly:
+`kubectl get all -n cancerns`
 
-# Access at: http://localhost:5001/
-
-****Doctor Dashboard****
-cd doctor-app/
-python -m pip install requirements.txt
-export DEBUG=1
-flask run -p 5002
-
-# Access at: http://localhost:5002/
-```
-
-**Kubernetes Manifests**
-
-Now, let's create a **kustomzie** manifest to run the application
-File Structure is as follows:
-
-1. `namespace.yaml`: It is the namespace created as Healthcare
-2. `kustomization.yaml`: It contains the kubernetes manifests structure
-    2.1. `deployment.yaml`: This is the deployment manifest
-    2.2. `service.yaml`: This file will container the service
-3. `Dataset/`: Dataset manifest contains the Kubernetes Job (to download the dataset), PVC (to mount the dataset as a volume)
-4. `Rancher/`: Rancher manifest contains the Rancher resources (Rancher Cluster, Rancher Project, Rancher Namespace, Rancher Secret)
-5. `lab-tech/`: Lab Technician manifest contains the Kubernetes Deployment, Service, PVC, Secret
-6. `doctor-app/`: Doctor Dashboard manifest contains the Kubernetes Deployment, Service, PVC, Secret
 
 ### License
 1. [http://creativecommons.org/licenses/by/3.0/](https://creativecommons.org/licenses/by/3.0/)
