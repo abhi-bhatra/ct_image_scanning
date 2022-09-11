@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block main %}
+
+<div class="container">
+    <h1 class="brand"><span>Doctor's</span> Dashboard</h1>
+    <a onClick="window.location.reload();" href="/"><i class="fa fa-rotate-right"></i> Get More Reports</a>
+    {% for image_name in image_names %}
+    <div class="wrapper animated bounceInLeft">
+        <div class="company-info">
+            <a href='/predict/{{image_name}}'><img class="img-responsive"
+                    src=" {{url_for('send_image', filename=image_name)}}" height="100" width="100"></a>
+        </div>
+        <div class="contact">
+            <!-- Add text below each image -->
+            <div class="text-center">
+                <a href='/predict/{{image_name}}'>{{image_name}}</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

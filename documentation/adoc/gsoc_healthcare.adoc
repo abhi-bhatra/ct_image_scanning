@@ -1,0 +1,738 @@
+:docinfo:
+include::./common_docinfo_vars.adoc[]
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// General comments
+// Keep in mind that this is a "getting started" guide and the
+//   audience that we are trying to reach.
+// Leverage ASCIIDoc features to make this document readable and usable:
+//   - Text highlights (follow SUSE style guides)
+//   - Admonitions (i.e., NOTE, TIP, IMPORTANT, CAUTION, WARNING)
+//   - Code blocks
+//   - Lists (ordered and unordered, as appropriate)
+//   - Links
+//   - Images
+//     - Place image files under the ./media directory tree
+//       (e.g., ./media/src/svg, ./media/src/png)
+//     - Format preferences: svg > png > jpg
+//     - Consolidate images wherever possible;
+//       that is, prefer text over images
+//   - Sections and subsections to organize content and break up actions
+// 
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Variables & Attributes
+// Follow indicated patterns.
+//   E.g., "Ondat data plane with SUSE Rancher"
+//         "Grace Hopper, Engineer, US Navy"
+//         "SUSE Linux Enterprise Server 15 SP4"
+//         "SUSE Rancher 2.6"
+// NOTE: Some variables & attributes have been deprecated and
+//       have been commented out below.
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+:title: Analytics Edge Ecosystem Workloads - Google Summer of Code
+:productname: Analytics Edge Ecosystem Workloads - Healthcare
+:partnerproductname: Google Summer of Code
+:author1: Abhinav Sharma, GSoC Contributor, SUSE Rancher
+//:revdate: Month dd, YYYY
+//:revnumber: YYYYmmdd
+//:toc2:
+//:toc-title: {title}
+//:toclevels: 4
+
+
+== Introduction
+
+=== Motivation
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// In this section, provide motivation for the document.
+// Provide a brief statement (2-4 sentences) to identify
+//   - what products are being highlighted
+//   - what the document is about and why it may be of
+//     interest to the reader and beyond.
+// Include an approved SUSE | Partner logo lock-up
+// Include additional details if needed, like
+//    - the challenges that are or can be addressed
+//    - specific benefits of this solution
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+// logo lock-up
+
+image::gsoc_intro_banner.png[Analytics Edge Ecosystem Workloads - Google Summer of Code, align="center"]
+
+Cancer is world's second-leading cause of death in the world. It results in development of adnormal cells that divide uncontrollably and have the ability to infiltrate and destroy normal body tissue. Eventually, survival rates are improving and all thanks to cancer screening, treatment and prevention. 
+
+Machine Learning is one of the aspect which can be integrated with the modern science and can create wonders. Under the Google Summer of Code, we at SUSE organization have created a Machine larning based Cancer Predicition Model for early screening.
+
+This Document will demonstrate the detailed approach undertaken to accomplish this project. The project is developed under mentorship of Bryan Gartner, Ann Davis, Brian Fromme and the SUSE organization.
+
+
+=== Scope
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Specify what this guide covers in no more than 2 sentences.
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+This guide introduces the basic concepts and steps to install, configure, and use the Cancer Prediction System in a SUSE Rancher Kubernetes environment. It uses Convolutional Neural Nets (CNNs) to automatically recognize the complex patterns in imaging data, providing quantitative as well as qualitative assessments of data within a short period of time.
+
+
+=== Audience
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Identify for whom this document is intended, perhaps with:
+//   - Topics of interests
+//   - Potential job roles
+//   - Required skills <- This can be critically important
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+This document is intended for Hospital Administrators, Radiologits, Doctors, Data Scientists, Data Engineers, and Data Analysts who are interested in using the Cancer Prediction System in a SUSE Rancher Kubernetes environment. It is also intended for SUSE Rancher users who want to learn how to install and configure the Cancer Prediction System.
+
+
+== Technical overview
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Provide a technical overview of the solution.
+// Identify components.
+// Describe how the components fit together.
+// Leverage diagrams as appropriate, including (but not limited to):
+//   - component architecture
+//   - data flow
+//   - workflow
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+As a part of GSoC, We have built a Machine Learning Based [.underline]#Cancer Predicition System#. The fundamental goal of the system is the prediciton of Cancer Suspectibility (also known as risk assessment), in this case, we are trying to predict the likelihood of developing a cancer prior to occurence of the disease.
+
+image::architecture.png[Healthcare Architecture, align="center"]
+
+The Cancer Prediction System uses CT Scanned Images in the form of https://www.dicomstandard.org/[DICOM (Digital Imaging and Communications in Medicine)]. The system is designed to be deployed as a Microservice based architecture and is divided into four interfaces:
+
+- Lab Technician Dashboard
+- Doctor Dashboard
+- Rancher Dashboard
+- ML Pipeline Dashboard
+
+
+=== Components and tools
+
+Key Cancer Prediction System components discussed in this guide are:
+
+Flask Application:: Flask is a micro web framework also written in Python. It is lightweight framework used to create web applications easily. We are using flask to serve the Backend and Machine Learning models as APIs.
+
+Kubernetes Architecture:: Kubernetes is a portable, extensible, open source platform for managing containerized workloads and services, that facilitates both declarative configuration and automation. We have a kubernetes manifests designed to set up application over the cluster. Our application is compatible with various kubernetes distributions. We have tested our application on SUSE Rancher.
+
+Keras:: Keras is an open-source software library that provides a Python interface for designing artificial neural networks. It acts as an interface for TensorFlow library. We are using keras to design https://www.tensorflow.org/tutorials/images/cnn[Convolutional Neural Nets (CNNs)] for our application.
+
+Kubeflow Pipelines:: It is used for machine learning pipelines to orchestrate workflows running on our Kubernetes clusters. Kubeflow allows us to focus on writing ML algorithms instead of managing their operations.
+
+
+Some additional components and tools discussed in this guide include:
+
+* https://longhorn.io/[Longhorn]: the cloud native distributed block storage system for Kubernetes.
+
+* https://rancher.com/[Rancher]: the Kubernetes management platform.
+
+* https://kubernetes.io/docs/reference/kubectl/[kubectl]: the command line tool for communicating with the Kubernetes cluster's control plane via the Kubernetes API.
+
+* https://github.com/kubernetes-sigs/kustomize[kustomize]: a stand-alone tool for programmatically customizing Kubernetes objects.
+
+* https://www.docker.com/[Docker]: the container runtime used to build and run the application.
+
+
+=== Process overview
+
+Getting started with Cancer Prediction System is fairly easy.
+In general, the process is as follows:
+
+. Clone the project repository: `git clone https://github.com/abhi-bhatra/ct_image_scanning.git`
+
+. Log in to your SUSE Rancher environment and select a managed cluster
+
+. Apply kubernetes manifests to setup the environment (_namespaces_ and _storage_)
+
+. Apply kubernetes manifests to deploy the application
+
+. Access the application via the Rancher Dashboard
+
+== Prerequisites
+
+This guide assumes that you have access to an existing Kubernetes cluster managed by https://rancher.com/docs/rancher/v2.6/en/overview/[SUSE Rancher].
+A good place to start getting more details is the https://medium.com/@abhinavsharma332/deploy-single-node-cluster-using-k3s-or-rke-6fc9e6a38b66[Deploying cluster Using Rancher Kubernetes Engine or K3S] blog.
+
+=== K3S Architecture
+
+image::rancherk3s.png[K3S Architecture, align="center", scaledwidth=70%]
+
+=== RKE Architecture
+
+image::rke.png[RKE Architecture, align="center"]
+ 
+
+[TIP]
+====
+Be sure docker is installed, as RKE (_Rancher Kubernetes Engine_) clusters need Docker as a prerequisite. https://www.docker.com/get-started/[Visit Docker website for more information].
+====
+
+
+== Install Rancher
+
+There are various ways to install the Rancher on the existing cluster. https://docs.ranchermanager.rancher.io/v2.5/pages-for-subheaders/installation-and-upgrade[This section provides an overview of installing options of Rancher]. 
+
+image::rancher_portal.png[Rancher Portal, align="center"]
+
+[TIP]
+====
+For this guide, we will be using the https://docs.ranchermanager.rancher.io/v2.5/pages-for-subheaders/install-upgrade-on-a-kubernetes-cluster[High-availability Kubernetes Install with the Helm CLI] to install Rancher on top of the cluster.
+====
+
+
+== Install Longhorn
+
+Before proceeding, review the concepts of persistent volumes, persistent volume claims (PVCs), and storage classes in the https://rancher.com/docs/rancher/v2.6/en/cluster-admin/volumes-and-storage/how-storage-works/[Rancher documentation].
+
+Longhorn provides a storage solution that is easy to use, self-healing, and highly available. Longhorn is designed to be deployed on a Kubernetes cluster and provides persistent storage for stateful applications. There are 3 ways to installing Longhorn to Clusters:
+
+. https://longhorn.io/docs/1.3.1/deploy/install/install-with-rancher/[Using the Apps and Marketplace in Rancher UI]
++
+image::longhorn_marketplace.png[Longhorn, scaledwidth=80%]
+
+. https://longhorn.io/docs/1.3.1/deploy/install/install-with-kubectl/[Using the kubectl manifests files]
++
+[source, bash]
+----
+kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v1.2.4/deploy/longhorn.yaml
+----
+
+. https://longhorn.io/docs/1.3.1/deploy/install/install-with-helm/[Using the Helm]:
++
+[source, bash]
+----
+helm repo add longhorn https://charts.longhorn.io
+helm repo update
+helm install longhorn/longhorn -name longhorn -namespace longhorn-system
+----
+
+. After successfull installation, you can see the Longhorn UI in the Rancher Dashboard.
++
+image::longhorn_dashboard.png[Longhorn Dashboard, scaledwidth=80%]
+
+[TIP]
+====
+Cancer Prediction System strongly recommends using atleast two-worker nodes cluster.
+====
+
+=== Provision local storage
+
+At this point, you can use Longhorn to format and manage the drives in your cluster nodes.
+
+. Provision the storage using the Flask Applications to share data and information on local cluster
++
+[source, bash]
+----
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data-pvc
+  namespace: cancerns
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+----  
+
+. Create a PersistentVolumeClaim (PVC) for the data volume
++
+[source, bash]
+----
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ds-pvc
+  namespace: cancerns
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: longhorn
+----
+
+. You can visualize the Persistent Volumes in the Rancher Dashboard.
++
+image::pvc.png[PVC, scaledwidth=80%]
+
+
+== Install Kubeflow Pipelines
+
+The Kubeflow project provides a straightforward way to deploy best-of-breed open-source systems for ML to diverse infrastructures. Anywhere you are running Kubernetes, you should be able to run Kubeflow. The https://www.kubeflow.org/docs/started/k8s/[Kubeflow documentation] provides a detailed guide to installing Kubeflow on Kubernetes.
+
+We will look at how to deploy Kubeflow Pipelines standalone on our local clusters: 
+
+. Set the PIPELINE_VERSION and apply the Kubeflow Pipelines manifest:
++
+[source, bash]
+----
+export PIPELINE_VERSION=1.8.3
+
+kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/cluster-scoped-resources?ref=$PIPELINE_VERSION"
+
+kubectl wait --for condition=established --timeout=60s crd/applications.app.k8s.io
+
+kubectl apply -k "github.com/kubeflow/pipelines/manifests/kustomize/env/platform-agnostic-pns?ref=$PIPELINE_VERSION"
+----
++
+[NOTE]
+====
+It will take 15 to 20 mins to deploy the Kubeflow Pipelines on your cluster. You can check the status using `kubectl get all -n kubeflow`
+====
+
+. Once all the services will start, you can see all pods status 1/1 Running. Your output will be somewhat similar to this: 
++
+[source, bash]
+----
+NAME                                                   READY   STATUS             RESTARTS   AGE
+pod/workflow-controller-5667759dd7-fbgrp               1/1     Running            0          2d3h
+pod/ml-pipeline-scheduledworkflow-7f8bc78db9-qpx4f     1/1     Running            0          2d3h
+pod/ml-pipeline-viewer-crd-8497d9695c-tqmdg            1/1     Running            0          2d3h
+pod/ml-pipeline-ui-69bc756bd7-nmzm6                    1/1     Running            0          2d3h
+pod/metadata-envoy-deployment-6df8bdd989-lc77p         1/1     Running            0          2d3h
+pod/minio-5b65df66c9-qt6lk                             1/1     Running            0          2d3h
+pod/ml-pipeline-persistenceagent-585c4b58d6-mcmtx      1/1     Running            1          2d3h
+pod/ml-pipeline-7cc4f8fdf7-b2vjp                       1/1     Running            2          2d3h
+pod/cache-server-6cddbbc849-bnd6n                      1/1     Running            1          2d3h
+----
+
+. To access the Kubeflow Pipelines UI, you can use the following command:
++
+[source, bash]
+----
+kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80
+----
+
+. Click on the pipeline port from the Rancher portal and you will be redirected to the Kubeflow Pipelines UI dashboard.
++
+image::select_ml_port.png[Kubeflow Pipelines Port Selection]
+
+. You can see the Kubeflow Pipelines UI dashboard.
++
+image::kubeflow.png[Kubeflow Pipelines Dashboard]
+
+== Download the Data
+
+image::dataset.jpg[Dataset Kaggle]
+
+The Cancer Prediction System uses the https://www.kaggle.com/datasets/kmader/siim-medical-images[CT Medical Images ~ cancer imaging archive with contrast and patient age] dataset from Kaggle.
+
+The dataset is designed to allow for different methods to be tested for examining the trends in CT image data associated with using contrast and patient age. The basic idea is to identify image textures, statistical patterns and features correlating strongly with these traits and possibly build simple tools for automatically classifying these images when they have been misclassified (or finding outliers which could be suspicious cases, bad measurements, or poorly calibrated machines). 
+
+Cancer prediction system dataset directory system:
+
+[source, bash]
+----
+/dataset
+-- archive/
+   -- dicom_dir/
+   .
+   ID_0001_AGE_0069_CONTRAST_1_CT.dcm
+   .
+   -- tiff_images/
+   .
+   ID_0000_AGE_0060_CONTRAST_1_CT.tif
+   .
+   -- full_archive.npz
+   -- overview.csv
+   
+-- dataset-classification
+   -- Chest-CT/
+   -- NonChest-CT/
+
+-- dataset-prediction/
+   -- train/
+      -- cancer/
+      -- non-cancer/
+   -- test/
+      -- cancer/
+      -- non-cancer/
+   -- validation/
+      -- cancer/
+      -- non-cancer/
+----
+
+. **archive**: This folder comprises of raw dataset downloaded from Kaggle. We use python notebooks to process the data for further used in Machine Learning model.
+
+. **dataset-classification**: This is a separate dataset which separates all the DICOM Images as Chest and Non Chest. Currentyl, our model support Cancer classification on Chest DICOM Images. So, we need to filter our the Non Chest DICOM Images.
+
+. **dataset-prediciton**: This is the final dataset used in Machine Learning model. All the ras images are processed into Train, Test and Validation sets. The labels are attached to the DICOM, so images can be classified as Cancer and Non-Cancer Images.
+
+Apply the dataset deployment manifests to download the dataset from storage and process the data for further use in Machine Learning model.
+
+[source, bash]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datasetvm
+  namespace: cancerns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: datasetvm
+  template:
+    metadata:
+      labels:
+        app: datasetvm
+    spec:
+      containers:
+      - name: datasetvm
+        image: "ubuntu:latest"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: dataset
+          mountPath: /dataset
+        env:
+        - name: DATASET
+          value: "https://rancherdataset.blob.core.windows.net/ct-images/dataset.zip"
+        command: ["/bin/sh","-c"]
+        args: ["apt-get update; apt-get install unzip wget -y; wget $DATASET -O /dataset/dataset.zip; unzip /dataset/dataset.zip -d /dataset/dataset; ls -l /dataset/dataset"]
+      volumes:
+      - name: dataset
+        persistentVolumeClaim:
+          claimName: ds-pvc
+----
+
+== Flask Interface
+
+Complete Cancer Prediction System is built on top of Flask. It has two separate applications for the doctor and the radiologist. Directory Structure of the application is as follows:
+
+[source, bash]
+----
+/application
+-- doctor_app/
+   -- app.py
+   -- Dockerfile
+   -- classification-model.h5
+   -- prediction-model.h5
+   -- requirements.txt
+   -- static/
+      -- styles/
+         -- css/
+         -- js/
+   -- template/
+      -- base.html
+      -- gallery.html
+      -- predict.html
+      -- retrain.html
+      -- upload.html
+
+-- lab_tech/
+   -- app.py
+   -- Dockerfile
+   -- classification-model.h5
+   -- adjust.py
+   -- requirements.txt
+   -- static/
+      -- styles/
+         -- css/
+         -- js/
+   -- template/
+      -- base.html
+      -- predict.html
+      -- send.html
+      -- upload.html
+----
+
+=== Deploy Lab Technician Interface
+
+image::labtech.png[Lab Technician Interface, align="center"]
+
+Lab Technician Interface is responsible for getting DICOM image as input. The person (_Radiologits_, _Lab Technician_, _Physicians_) could alter the information such as Contrast, Brightness and Angle of rotation of the DICOM image. They can also read all the information associated with the DICOM image (Modality: CT Scan). 
+
+Lab Technician Interface have a streamlined installation process. It can be easily installed through the Manifests.
+
+. Clone the repository
++
+[source, bash]
+----
+git clone https://github.com/abhi-bhatra/ct_image_scanning.git
+----
+
+. Change the directory to `k8s/lab-tech`
+
+. Apply the kustomization file to deploy the Lab Technician Interface
++
+[source, bash]
+----
+kubectl apply -k .
+----
+
+. To access the Lab Technician Interface, go to Rancher UI and click on the `lab-tech` service. Click on the `Port` button. Click on the port displayed. You will be redirected to the Lab Technician Interface.
+
+=== Deploy Doctor Dashboard Interface
+
+image::doctor.png[Doctor Dashboard Interface, align="center"]
+
+Doctor Dashboard is designed for the doctors to examine the report send by the Lab Technician. It receives the report of a patient and displays it to the user, predicting whether or not person is suffering from cacner. If doctor will not be satisfied with the response, they can send the image for the retraining with the correct label attached to it.
+
+Just like Lab Technician Interface, doctor's dashboard Interface installation process is streamline and can be installed through manifests.
+
+. Clone the repository
++
+[source, bash]
+----
+git clone https://github.com/abhi-bhatra/ct_image_scanning.git
+----
+
+. Change the directory to `k8s/doctor-app/`
+
+. Apply the kustomization file to deploy the Doctor Dashboard Interface
++
+[source, bash]
+----
+kubectl apply -k .
+----
+
+== Machine Learning Model
+
+In the project, Machine Learning is one of the major component used for predicition. We are using Convolutional Neural Network (CNN). It is a deep learning method and has achieved better results in detecting and segmenting specific objects in images in the last decade than conventional models such as regression, support vector machines or artificial neural networks.
+
+image::model_kflow.png[ML Model Architecture, align="center"]
+
+=== Body-part Classification Model
+
+Classification models are a subset of supervised machine learning. A classification model reads some input and generates an output that classifies the input into some category. In our case, model is taking CT-Scan and X-Ray images as input, and images are labelled. The model is a Supervised Learning technique that is used to identify the category of new observations on the basis of training data. 
+
+Complete Reference to the Classification Model can be found at: https://github.com/abhi-bhatra/ct_image_scanning/blob/UI_base/ML_MODEL/neural_net.ipynb
+
+=== Cancer Prediction Model
+
+In this model, we use machine learning in cancer diagnosis and detection. We are using Artificial neural networks (ANNs) for detecting and classifying tumors CRT images. We are using https://github.com/abhi-bhatra/ct_image_scanning/blob/UI_base/ML_MODEL/cancer_detection.ipynb[Convolutional Neural Network (CNN) for building the model]. We are using 3 convolutional layers and 2 dense layers. We are using RMSprop optimizer and binary crossentropy loss function.
+
+Steps for Prediction model are as follows:
+
+. **Preprocessing**: In this step, we are converting the images into grayscale and resizing them to 128x128 pixels. We are also converting the labels into one-hot encoding.
++
+image::dataset_overview.png[Dataset Overview]
+
+. **Splitting the dataset**: We are splitting the dataset into training, validation and testing sets. We are using 80% of the dataset for training, 10% for validation and 10% for testing.
++
+image::train_test_split.png[Dataset Split]
+
+. **Building the model**: We are using Convolutional Neural Network (CNN) for building the model. We are using 3 convolutional layers and 2 dense layers. We are using Adam optimizer and categorical crossentropy loss function.
++
+image::trained_grid.png[Model Architecture]
+
+. **Training the model**: We are training the model for 200 epochs. We are using 32 as the batch size.
++
+image::prediction_cancer.png[Prediction]
+
+=== Retraining Model
+
+Kubeflow Pipelines is a platform for building and deploying portable, scalable machine learning (ML) workflows based on Docker containers. 
+
+Retraining the Machine Learning Model is an automated process. We have used Kubeflow Pipelines to automate the process of retraining the model. It comprises of the following steps:
+
+. **Data Collection**: The data is collected from the dataset-prediction folder. The data is split into Train, Test and Validation sets. The labels are attached to the images. The data is then stored in the `dataset` folder.
++
+image::download_data.png[Collecting Data, scaledwidth=50%]
+
+. **Data Preprocessing**: The data is preprocessed to remove the noise from the images. The images are converted into grayscale images. The images are then resized to 512x512. The data is then stored in the `preprocessed` folder.
++
+image::preprocess_data.png[Preprocessing Data, scaledwidth=50%]
+
+. **Trained Model**: The model is trained on the preprocessed data. The model is saved in the `trained-model` folder.
++
+image::retrain.png[Retraining Model, scaledwidth=50%]
+
+. **Prediction**: The model is then converted into a prediction model. The prediction model is saved in the `prediction-model` folder.
++
+image::predict_data.png[Prediction Model, scaledwidth=50%]
+
+Complete Reference to the Retraining Model can be found at: https://github.com/abhi-bhatra/ct_image_scanning/blob/UI_base/ML_MODEL/kflow_model.py
+
+
+=== Verify installation
+
+After you have performed all of the above installation methods, validate that the Cancer Prediction System is installed and running.
+
+. List the pods running in the 'cancerns' namespace.
++
+[source, bash]
+----
+kubectl get all --namespace cancerns
+----
+This should produce output like the following:
++
+[source, bash]
+----
+NAME                               READY   STATUS    RESTARTS   AGE
+pod/datasetvm-5db64d7549-cflmf     1/1     Running   0          9s
+pod/doctor-app-d5b856997-64gnt     1/1     Running   0          10s
+pod/labtech-app-6c54f58874-jdmcw   1/1     Running   0          12s
+
+NAME                  TYPE       CLUSTER-IP    EXTERNAL-IP    PORT(S)          AGE
+service/doctor-svc    NodePort   10.0.66.40    None           5002:30001/TCP   23s
+service/labtech-svc   NodePort   10.0.145.57   None           5001:32009/TCP   24s
+
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/datasetvm     1/1     1            0           13s
+deployment.apps/doctor-app    1/1     1            0           23s
+deployment.apps/labtech-app   1/1     1            0           23s
+
+NAME                                     DESIRED   CURRENT   READY   AGE
+replicaset.apps/datasetvm-5db64d7549     1         1         1       13s
+replicaset.apps/doctor-app-d5b856997     1         1         1       10s
+replicaset.apps/labtech-app-6c54f58874   1         1         1       21s
+----
+
+. Verify that you see `doctor-app-` and `labtech-app-` pods in the 'Running' state and the `service/doctor-svc` and `service/labtech-svc` assigned to NodePort addresses.
+
+. Open the Kubeflow Console.
++
+You can temporarily forward traffic from the Kubeflow Pipeline Console service to your local machine by issuing:
++
+[source, bash]
+----
+kubectl port-forward -n kubeflow svc/ml-pipeline-ui 8080:80
+----
++
+This will produce output like the following:
++
+[source, bash]
+----
+Forwarding from 127.0.0.1:8080 -> 3000
+Forwarding from [::1]:8080 -> 3000
+
+Connect using: http://localhost:8080
+----
+
+. To access the application in your Web browser, open the Rancher portal at `https://localhost`:
+
+[NOTE]
+====
+If you are using a different port on Rancher, put :PORT_NUMBER with the port you are using.
+====
+
+== Connect as an external client
+
+By default, external applications cannot access the Cancer Prediction System.
+
+With SUSE Rancher, you can set up either load balancers or ingress controllers to redirect service requests.
+Load balancers can only handle one IP address per service, while ingress works with one or more ingress controllers to dynamically route service requests.
+
+It is recommended that you configure your cluster with an ingress.
+
+[NOTE]
+====
+Ingress and ingress controllers residing in RKE-launched clusters are powered by https://www.nginx.com/[NGINX].
+====
+
+Below is a sample ingress resource for Cancer Prediction System:
+[source, bash]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-minio
+  namespace: cancerns
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ## Remove if using CA signed certificate
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      client_max_body_size 0;
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      chunked_transfer_encoding off;
+spec:
+  tls:
+  - hosts:
+      - cancerpred.example.com
+    secretName: cancerpred-tls
+  rules:
+  - host: cancerpred.example.com
+    http:
+      paths:
+      - path: /doctor
+        pathType: Prefix
+        backend:
+          service:
+            name: doctor-svc
+            port:
+              number: 443
+      - path: /labtech
+        pathType: Prefix
+        backend:
+          service:
+            name: labtech-svc
+            port:
+              number: 443
+----
+
+== Demonstration
+
+Below is a demonstration of the Cancer Prediction System.
+
+video::walkthrough.mp4[]
+
+== Summary
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Summarize what was covered, including:
+//   - Motivation
+//   - Installation
+//   - Demonstration
+// Include any hints about other capabilities.
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+In this guide, you have explored how Aritficial Intelligence is used for Cancer detection. This application has a streamline process of deploying into your SUSE Rancher Kubernetes landscape for consumption by your cloud native applications through a consistent API across all infrastructure platforms.
+
+
+Below are a few resources to help you continue your exploration of Cancer Predicition System and SUSE Rancher:
+
+* https://documentation.suse.com/trd/kubernetes/[SUSE Technical Reference Documentation: Kubernetes]
+* https://www.suse.com/community/[SUSE & Rancher Community]
+* https://www.suse.com/c/preparing-for-the-next-wave-of-transformation/[Preparing for the next wave of transformation]
+* https://github.com/abhi-bhatra/ct_image_scanning/tree/master[Analytical Edge Ecosystem Worload for Healthcare Space]
+* https://medium.com/@abhinavsharma332/deploying-wordpress-over-rancher-cb9539b1d7da[Getting Started with Sample workload over Rancher]
+* https://medium.com/@abhinavsharma332/empowering-machine-learning-applications-on-rancher-f4e368a9009[Empowering Machine Learning Application on Rancher]
+* https://medium.com/@abhinavsharma332/orchestrate-machine-learning-model-with-kubeflow-11945e7801b5[Orchestrate Machine Learning Model with Kubeflow]
+
+
+
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+// Do not modify below this break.
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+++++
+<?pdfpagebreak?>
+++++
+
+
+:leveloffset: 0
+
+== Legal notice
+include::common_trd_legal_notice.adoc[]
+
+++++
+<?pdfpagebreak?>
+++++
+
+
+:leveloffset: 0
+include::common_gfdl1.2_i.adoc[]
+
+//end

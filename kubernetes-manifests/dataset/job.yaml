@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datasetvm
+  namespace: cancerns
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: datasetvm
+  template:
+    metadata:
+      labels:
+        app: datasetvm
+    spec:
+      containers:
+      - name: datasetvm
+        image: "ubuntu:latest"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: dataset
+          mountPath: /dataset
+        env:
+        - name: DATASET
+          value: "https://rancherdataset.blob.core.windows.net/ct-images/dataset.zip"
+        command: ["/bin/sh","-c"]
+        args: ["apt-get update; apt-get install unzip wget -y; wget $DATASET -O /dataset/dataset.zip; unzip /dataset/dataset.zip -d /dataset/dataset; ls -l /dataset/dataset"]
+      volumes:
+      - name: dataset
+        persistentVolumeClaim:
+          claimName: ds-pvc

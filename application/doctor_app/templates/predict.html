@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class="container">
+	<h1 class="brand"><span>Doctor's</span> Dashboard</h1>
+	<div class="wrapper animated bounceInLeft">
+		<div class="company-info">
+			<h3>Need to send it to further Diagnosis ?</h3>
+			{% if ct_image %}
+			<p class="full wow fadeInUp">
+				<button class="open-dialog">Send DICOM</button>
+			</p>
+			{% endif %}
+			{% if status %}
+			<p><b>Currently NON-CHEST DICOM are not supported</b></p>
+			{% endif %}
+		</div>
+		<div class="contact">
+			{% if id %}
+			<img class="img-responsive" src="{{url_for('send_image', filename=id)}}" height="300" width="300">
+			<br />
+			<div class="text-center">
+				{% if ct_image %}
+				<p>Status of Cancer: <b> {{ct_image}}</b></p>
+				{% endif %}
+				{% if status %}
+				<p>Body part examined is a Non-Chest</p>
+				{% endif %}
+			</div>
+			{% endif %}
+		</div>
+		{% if ct_image %}
+		<dialog class="example-dialog">
+			<div class="contact">
+				<form method="post" action="{{ url_for('retrain', variable=id) }}" enctype="multipart/form-data">
+					<p>
+						<label>Doctor Name</label>
+						<input type="text" name="name">
+					</p>
+					<br />
+					<p>
+						<label>Cancer Detected ?</label>
+						<select name="cancer-detect" id="cancer-detect">
+							<option value="cancer" name="cancer">Yes</option>
+							<option value="non-cancer" name="cancer">No</option>
+						</select>
+					</p>
+					<p class="full">
+						<label>Add Diseases you Diagnosed! (Enter from new line)</label>
+						<textarea name="disease" rows="4"></textarea>
+					</p>
+					<button type="submit" class="btn btn-primary">Submit</button>
+				</form>
+			</div>
+		</dialog>
+		{% endif %}
+	</div>
+</div>
+
+<script>
+	let rotation = 0;
+	const result = document.querySelector('.result');
+
+	const dialog = document.querySelector('.example-dialog');
+
+	dialog.addEventListener('cancel', (event) => {
+		result.textContent = 'dialog was canceled';
+	});
+
+	const openDialog = document.querySelector('.open-dialog');
+	openDialog.addEventListener('click', () => {
+		if (typeof dialog.showModal === 'function') {
+			dialog.showModal();
+			result.textContent = '';
+		} else {
+			result.textContent = 'The dialog API is not supported by this browser';
+		}
+	});
+
+	const closeButton = document.querySelector('.close');
+	closeButton.addEventListener('click', () => {
+		dialog.close();
+	});
+
+	function rotateImg() {
+		rotation += 90;
+		if (rotation === 360) {
+			// 360 means rotate back to 0
+			rotation = 0;
+		}
+		document.querySelector("#image-cropper").style.transform = `rotate(${rotation}deg)`;
+	}
+
+	function fun(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: brightness(" + val + "%);");
+	}
+	function fun2(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: contrast(" + val + "%);");
+	}
+	$(document).on('change', '.file-input', function () {
+		var filesCount = $(this)[0].files.length;
+
+		var textbox = $(this).prev();
+
+		if (filesCount === 1) {
+			var fileName = $(this).val().split('\\').pop();
+			textbox.text(fileName);
+		} else {
+			textbox.text(filesCount + ' files selected');
+		}
+	});
+</script>
+
+{% endblock %}

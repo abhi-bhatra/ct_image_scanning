@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block main %}
+
+<div class="container">
+    <h1 class="brand"><span>Cancer</span> Prediction App</h1>
+    <div class="wrapper animated bounceInLeft">
+        <div class="company-info">
+            <h3>Lab Technician Usage</h3>
+            <ul>
+                <li>Upload Format: <b>DCM</b></li>
+                <li>File Name: </li>
+                <li></li>
+            </ul>
+        </div>
+        <div class="contact">
+            <h3>Thank You Data Submitted to Doctor !!!</h3>
+            <form action="{{ url_for('upload_form') }}">
+                <p class="full wow fadeInUp">
+                    <button>Get Back to Home</button>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block main %}
+
+<div class="container">
+	<h1 class="brand"><span>Cancer</span> Prediction App</h1>
+	<div class="wrapper animated bounceInLeft">
+		<div class="company-info">
+			<h3>Lab Technician Usage</h3>
+			{% if filename %}
+			<ul>
+				<li>Upload Format: <b>DCM</b></li>
+				<li>File Name: {{ filename }}</li>
+				<li>Status: {{ ct_image }}</li>
+			</ul>
+			<img id="image-cropper" src="{{ url_for('display_image', filename=filename) }}" height="300" width="300">
+			<br />
+			{% endif %}
+		</div>
+		<div class="contact">
+			<h3>Upload the DICOM</h3>
+			<p style="color: red;"></p>
+			{% with messages = get_flashed_messages() %}
+			{% if messages %}
+
+			{% for message in messages %}
+			<p style="color: green;">{{ message }}</p>
+			{% endfor %}
+			{% endif %}
+			{% endwith %}
+			</p>
+			{% if ct_image %}
+
+			<div class="contact">
+				<b>Brightness: </b> <input type="range" min="100" max="300" value="100" onchange="fun(this)">
+				<b>Contrast: </b> <input type="range" min="100" max="300" value="100" onchange="fun2(this)">
+				<a onClick="rotateImg()" href="#"><i class="fa fa-rotate-right" style="font-size:28px;"></i></a>
+			</div>
+
+			<div class="contact">
+				<p class="full wow fadeInUp">
+					<button class="open-dialog">Read DICOM</button>
+				</p>
+				<form action="{{ url_for('upload_form') }}">
+					<p class="full wow fadeInUp">
+						<button>Go Back</button>
+					</p>
+				</form>
+				<br />
+				<form action="{{ url_for('send') }}">
+					<p class="full wow fadeInUp">
+						<button>Send Report</button>
+					</p>
+				</form>
+			</div>
+			<dialog class="example-dialog">
+				<div id="moreinfo" class="modal fade" role="dialog">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header justify-content-center">
+								<b>Patient Status: {{ ct_image }}</b>
+							</div>
+							<div class="modal-body">
+								<table class="table table-bordered table-hover">
+									<thead>
+										<tr>
+											<th scope="col">DICOM Attribute</th>
+											<th scope="col">DICOM Value</th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for key, value in metadata.items() %}
+										<tr>
+											<td style="word-break: break-word;">{{ key }}</td>
+											<td style="word-break: break-word;">{{ value }}</td>
+										</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+							<div class="modal-footer">
+								<button class="close" type="reset">Close</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- <button class="close" type="reset">Close</button> -->
+			</dialog>
+
+			<!-- <div class="result"></div> -->
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+<script>
+	let rotation = 0;
+	const result = document.querySelector('.result');
+
+	const dialog = document.querySelector('.example-dialog');
+
+	dialog.addEventListener('cancel', (event) => {
+		result.textContent = 'dialog was canceled';
+	});
+
+	const openDialog = document.querySelector('.open-dialog');
+	openDialog.addEventListener('click', () => {
+		if (typeof dialog.showModal === 'function') {
+			dialog.showModal();
+			result.textContent = '';
+		} else {
+			result.textContent = 'The dialog API is not supported by this browser';
+		}
+	});
+
+	const closeButton = document.querySelector('.close');
+	closeButton.addEventListener('click', () => {
+		dialog.close();
+	});
+
+	function rotateImg() {
+		rotation += 90; 
+		if (rotation === 360) {
+			// 360 means rotate back to 0
+			rotation = 0;
+		}
+		document.querySelector("#image-cropper").style.transform = `rotate(${rotation}deg)`;
+	}
+
+	function fun(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: brightness(" + val + "%);");
+	}
+	function fun2(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: contrast(" + val + "%);");
+	}
+	$(document).on('change', '.file-input', function () {
+		var filesCount = $(this)[0].files.length;
+
+		var textbox = $(this).prev();
+
+		if (filesCount === 1) {
+			var fileName = $(this).val().split('\\').pop();
+			textbox.text(fileName);
+		} else {
+			textbox.text(filesCount + ' files selected');
+		}
+	});
+</script>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class="container">
+    <h1 class="brand"><span>Cancer</span> Prediction App</h1>
+    <div class="wrapper animated bounceInLeft">
+        <div class="company-info">
+            <h3>Doctor's Dashboard</h3>
+            <ul>
+                <li>Upload Format: <b>DCM</b></li>
+                <li></li>
+            </ul>
+        </div>
+        {% if doc_name %}
+        <div class="contact">
+            <h3>Thank You Dr. <span>{{ doc_name }}</span> for your Input !!!</h3>
+            <form action="/">
+                <p class="full wow fadeInUp">
+                    <button>Get Back to Home</button>
+                </p>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

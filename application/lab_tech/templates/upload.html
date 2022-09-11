@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block main %}
+
+<div class="container">
+	<h1 class="brand"><span>Cancer</span> Prediction App</h1>
+	<div class="wrapper animated bounceInLeft">
+		<div class="company-info">
+			<h3>Lab Technician Usage</h3>
+			<ul>
+				<li>Upload Format: <b>DCM</b></li>
+				<li>File Name: </li>
+				<li></li>
+			</ul>
+		</div>
+		<div class="contact">
+			<h3>Upload the DICOM</h3>
+			<p style="color: red;"></p>
+			{% with messages = get_flashed_messages() %}
+			{% if messages %}
+
+			{% for message in messages %}
+			<p style="color: green;">{{ message }}</p>
+			{% endfor %}
+			{% endif %}
+			{% endwith %}
+			</p>
+			{% if filename %}
+			<img id="image-cropper" src="{{ url_for('display_image', filename=filename) }}" height="300" width="300">
+			<br />
+			<div>
+				<b>Brightness: </b> <input type="range" min="100" max="300" value="100" onchange="fun(this)">
+				<b>Contrast: </b> <input type="range" min="100" max="300" value="100" onchange="fun2(this)">
+			</div>
+			{% endif %}
+
+			{% if ct_image %}
+			<a class="btn btn-danger" href="{{ url_for('upload_form') }}">Go Back</a>
+			<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moreinfo">Read
+				DICOM</button>
+			<a class="btn btn-success" href="{{ url_for('send') }}">Send Report</a>
+			<div id="moreinfo" class="modal fade" role="dialog">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header justify-content-center">
+							<b>Patient Status: {{ ct_image }}</b>
+						</div>
+						<div class="modal-body">
+							<table class="table table-bordered table-hover">
+								<thead>
+									<tr>
+										<th scope="col">DICOM Attribute</th>
+										<th scope="col">DICOM Value</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for key, value in metadata.items() %}
+									<tr>
+										<td style="word-break: break-word;">{{ key }}</td>
+										<td style="word-break: break-word;">{{ value }}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			{% endif %}
+			<div class="container d-flex justify-content-center mt-100">
+
+				<form method="post" action="/" enctype="multipart/form-data">
+					<p class="full wow fadeInUp">
+                        <input type="file" name="file" class="file-input">
+                    </p>
+                    <p class="full wow fadeInUp">
+                        <button>Upload Image</button>
+                    </p>
+			</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<script>
+	function fun(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: brightness(" + val + "%);");
+	}
+	function fun2(e) {
+		var container = document.getElementById('image-cropper');
+		var val = e.value;
+		container.setAttribute("style", "filter: contrast(" + val + "%);");
+	}
+	$(document).on('change', '.file-input', function () {
+		var filesCount = $(this)[0].files.length;
+
+		var textbox = $(this).prev();
+
+		if (filesCount === 1) {
+			var fileName = $(this).val().split('\\').pop();
+			textbox.text(fileName);
+		} else {
+			textbox.text(filesCount + ' files selected');
+		}
+	});
+</script>
+
+{% endblock %}
